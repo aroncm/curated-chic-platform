@@ -42,7 +42,7 @@ export async function GET(
   }
 
   return NextResponse.json({
-    tagIds: (rows ?? []).map(r => r.tag_id),
+    tagIds: (rows ?? []).map((r: any) => r.tag_id),
   });
 }
 
