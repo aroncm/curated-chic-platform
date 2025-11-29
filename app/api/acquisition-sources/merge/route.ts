@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import type { Database } from '@/types/supabase';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
 const MergeSchema = z.object({
@@ -10,7 +9,7 @@ const MergeSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const supabase = createSupabaseServerClient() as SupabaseClient<Database>;
+  const supabase = createSupabaseServerClient() as any;
   const {
     data: { user },
   } = await supabase.auth.getUser();
