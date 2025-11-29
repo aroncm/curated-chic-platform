@@ -203,7 +203,7 @@ Rules:
       },
     ];
 
-    const response = await openai.responses.create({
+    const response = await (openai as any).responses.create({
       model: 'gpt-4o',
       input: [
         {
