@@ -106,7 +106,7 @@ export default async function ItemDetailPage({
             <div key={img.id} className="relative w-40 h-40 flex-shrink-0">
               <Image
                 src={img.url}
-                alt={item.title}
+                alt={itemData.title}
                 fill
                 className="object-cover rounded"
               />
