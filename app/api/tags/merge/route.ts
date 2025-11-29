@@ -8,7 +8,7 @@ const MergeSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerClient() as any; // 
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: itemTagsError.message }, { status: 500 });
   }
 
-  const itemIds = (itemRows ?? []).map(r => r.item_id);
+  const itemIds = (itemRows ?? []).map((r: any) => r.item_id);
   if (itemIds.length > 0) {
     // 2) Upsert (item_id, toId) pairs
     const rowsToInsert = itemIds.map(itemId => ({
