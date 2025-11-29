@@ -49,13 +49,10 @@ export default async function ItemsPage() {
           </tr>
         </thead>
         <tbody>
-          {(items ?? []).map(item => (
+          {(items ?? []).map((item: any) => (
             <tr key={item.id} className="border-t">
               <td className="px-3 py-2">
-                <Link
-                  href={`/items/${item.id}`}
-                  className="hover:underline"
-                >
+                <Link href={`/items/${item.id}`} className="hover:underline">
                   {item.title}
                 </Link>
               </td>
