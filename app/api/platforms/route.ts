@@ -9,7 +9,7 @@ const CreatePlatformSchema = z.object({
 });
 
 export async function GET() {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerClient() as any;
   const { data, error } = await supabase
     .from('listing_platforms')
     .select('*')
@@ -23,7 +23,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerClient() as any;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
       name: name.trim(),
       slug: slug.trim().toLowerCase(),
       default_fee_percent: defaultFeePercent ?? null,
-    })
+    } as any)
     .select('*')
     .single();
 
