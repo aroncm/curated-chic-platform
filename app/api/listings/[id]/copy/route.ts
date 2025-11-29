@@ -34,7 +34,7 @@ function calculateUsageCost(rawUsage: any): Usage {
 }
 
 async function logUsage(
-  supabase: ReturnType<typeof createRouteHandlerClient>,
+  supabase: ReturnType<typeof createSupabaseServerClient>,
   userId: string,
   listingId: string,
   usage: Usage
@@ -63,7 +63,7 @@ export async function GET(
     );
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerClient() as any;
 
   // Auth
   const {
