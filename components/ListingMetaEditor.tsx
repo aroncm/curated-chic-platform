@@ -170,7 +170,7 @@ export function ListingMetaEditor({
             >
               {statusOptions.map(s => (
                 <option key={s} value={s}>
-                  {s[0].toUpperCase() + s.slice(1)}
+                  {s ? s[0].toUpperCase() + s.slice(1) : ''}
                 </option>
               ))}
             </select>
