@@ -6,6 +6,11 @@ type SearchParams = {
   to?: string;
 };
 
+type AiUsageStats = {
+  totalCost: number;
+  callCount: number;
+};
+
 export default async function ReportingPage({
   searchParams,
 }: {
@@ -131,6 +136,26 @@ export default async function ReportingPage({
   );
   const soldRows = rows.filter(r => r.status === 'sold');
 
+  let aiUsage: AiUsageStats = { totalCost: 0, callCount: 0 };
+  try {
+    const { data: usageData, error: usageError } = await supabase
+      .from('ai_usage')
+      .select('total_cost_usd')
+      .eq('user_id', user.id);
+
+    if (!usageError && usageData) {
+      aiUsage = {
+        totalCost: usageData.reduce(
+          (sum, u) => sum + (u.total_cost_usd ?? 0),
+          0
+        ),
+        callCount: usageData.length,
+      };
+    }
+  } catch (e) {
+    aiUsage = { totalCost: 0, callCount: 0 };
+  }
+
   return (
     <main className="space-y-6">
       <div className="flex items-center justify-between gap-2">
@@ -179,7 +204,7 @@ export default async function ReportingPage({
         </button>
       </form>
 
-      <section className="grid md:grid-cols-3 gap-3 text-xs">
+      <section className="grid md:grid-cols-4 gap-3 text-xs">
         <div className="bg-white rounded p-3 shadow-sm">
           <div className="text-[11px] text-slate-500">Total cost basis</div>
           <div className="text-lg font-semibold">
@@ -209,6 +234,16 @@ export default async function ReportingPage({
           </div>
           <div className="text-[11px] text-slate-500 mt-1">
             Keep an eye on time to sell and adjust prices.
+          </div>
+        </div>
+
+        <div className="bg-white rounded p-3 shadow-sm">
+          <div className="text-[11px] text-slate-500">AI spend (est.)</div>
+          <div className="text-lg font-semibold">
+            ${aiUsage.totalCost.toFixed(4)}
+          </div>
+          <div className="text-[11px] text-slate-500 mt-1">
+            Across {aiUsage.callCount} calls (estimate, based on token usage).
           </div>
         </div>
       </section>

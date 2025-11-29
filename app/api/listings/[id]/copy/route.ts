@@ -7,6 +7,52 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const INPUT_RATE_PER_TOKEN = 5 / 1_000_000; // gpt-4o input $5 / 1M tokens
+const OUTPUT_RATE_PER_TOKEN = 15 / 1_000_000; // gpt-4o output $15 / 1M tokens
+
+type Usage = {
+  prompt_tokens: number | null;
+  completion_tokens: number | null;
+  total_cost_usd: number | null;
+};
+
+function calculateUsageCost(rawUsage: any): Usage {
+  const prompt_tokens = rawUsage?.prompt_tokens ?? rawUsage?.input_tokens ?? null;
+  const completion_tokens = rawUsage?.completion_tokens ?? rawUsage?.output_tokens ?? null;
+
+  if (prompt_tokens == null && completion_tokens == null) {
+    return { prompt_tokens: null, completion_tokens: null, total_cost_usd: null };
+  }
+
+  const promptCost = prompt_tokens != null ? prompt_tokens * INPUT_RATE_PER_TOKEN : 0;
+  const completionCost = completion_tokens != null ? completion_tokens * OUTPUT_RATE_PER_TOKEN : 0;
+
+  return {
+    prompt_tokens,
+    completion_tokens,
+    total_cost_usd: Number((promptCost + completionCost).toFixed(6)),
+  };
+}
+
+async function logUsage(
+  supabase: ReturnType<typeof createRouteHandlerClient>,
+  userId: string,
+  listingId: string,
+  usage: Usage
+) {
+  if (usage.prompt_tokens == null && usage.completion_tokens == null) return;
+  await supabase.from('ai_usage').insert({
+    user_id: userId,
+    listing_id: listingId,
+    item_id: null,
+    endpoint: 'listing_copy',
+    model: 'gpt-4o',
+    prompt_tokens: usage.prompt_tokens,
+    completion_tokens: usage.completion_tokens,
+    total_cost_usd: usage.total_cost_usd,
+  });
+}
+
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
@@ -186,7 +232,7 @@ Return ONLY JSON in this schema: no explanations, no extra text.
     }
 
     const response = await openai.responses.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       input: [
         {
           role: 'user',
@@ -221,10 +267,19 @@ Return ONLY JSON in this schema: no explanations, no extra text.
       },
     });
 
+    const usage = calculateUsageCost((response as any).usage);
+
     const outputText = (response as any).output_text as string;
     const parsed = JSON.parse(outputText);
 
-    return NextResponse.json({ copy: parsed });
+    // Best-effort usage logging
+    try {
+      await logUsage(supabase, user.id, listingId, usage);
+    } catch (logErr) {
+      console.error('Failed to log AI usage', logErr);
+    }
+
+    return NextResponse.json({ copy: parsed, usage });
   } catch (e: any) {
     console.error('Listing copy generation failed', e);
     return NextResponse.json(

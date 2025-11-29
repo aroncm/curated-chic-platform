@@ -420,6 +420,89 @@ export interface Database {
           }
         ]
       }
+      ai_usage: {
+        Row: {
+          id: string
+          user_id: string
+          item_id: string | null
+          listing_id: string | null
+          endpoint: string | null
+          model: string | null
+          prompt_tokens: number | null
+          completion_tokens: number | null
+          total_cost_usd: number | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          item_id?: string | null
+          listing_id?: string | null
+          endpoint?: string | null
+          model?: string | null
+          prompt_tokens?: number | null
+          completion_tokens?: number | null
+          total_cost_usd?: number | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          item_id?: string | null
+          listing_id?: string | null
+          endpoint?: string | null
+          model?: string | null
+          prompt_tokens?: number | null
+          completion_tokens?: number | null
+          total_cost_usd?: number | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_usage_item_id_fkey"
+            columns: ["item_id"]
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_usage_listing_id_fkey"
+            columns: ["listing_id"]
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+
+        Row: {
+          item_id: string
+          tag_id: string
+          created_at: string | null
+        }
+        Insert: {
+          item_id: string
+          tag_id: string
+          created_at?: string | null
+        }
+        Update: {
+          item_id?: string
+          tag_id?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_tags_item_id_fkey"
+            columns: ["item_id"]
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
 
     Views: {

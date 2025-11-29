@@ -7,6 +7,52 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const INPUT_RATE_PER_TOKEN = 5 / 1_000_000; // gpt-4o input $5 / 1M tokens
+const OUTPUT_RATE_PER_TOKEN = 15 / 1_000_000; // gpt-4o output $15 / 1M tokens
+
+type Usage = {
+  prompt_tokens: number | null;
+  completion_tokens: number | null;
+  total_cost_usd: number | null;
+};
+
+function calculateUsageCost(rawUsage: any): Usage {
+  const prompt_tokens = rawUsage?.prompt_tokens ?? rawUsage?.input_tokens ?? null;
+  const completion_tokens = rawUsage?.completion_tokens ?? rawUsage?.output_tokens ?? null;
+
+  if (prompt_tokens == null && completion_tokens == null) {
+    return { prompt_tokens: null, completion_tokens: null, total_cost_usd: null };
+  }
+
+  const promptCost = prompt_tokens != null ? prompt_tokens * INPUT_RATE_PER_TOKEN : 0;
+  const completionCost = completion_tokens != null ? completion_tokens * OUTPUT_RATE_PER_TOKEN : 0;
+
+  return {
+    prompt_tokens,
+    completion_tokens,
+    total_cost_usd: Number((promptCost + completionCost).toFixed(6)),
+  };
+}
+
+async function logUsage(
+  supabase: ReturnType<typeof createRouteHandlerClient>,
+  userId: string,
+  itemId: string,
+  usage: Usage
+) {
+  if (usage.prompt_tokens == null && usage.completion_tokens == null) return;
+  await supabase.from('ai_usage').insert({
+    user_id: userId,
+    item_id: itemId,
+    listing_id: null,
+    endpoint: 'analyze',
+    model: 'gpt-4o',
+    prompt_tokens: usage.prompt_tokens,
+    completion_tokens: usage.completion_tokens,
+    total_cost_usd: usage.total_cost_usd,
+  });
+}
+
 export async function POST(
   _req: Request,
   { params }: { params: { id: string } }
@@ -158,7 +204,7 @@ Rules:
     ];
 
     const response = await openai.responses.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       input: [
         {
           role: 'user',
@@ -203,8 +249,9 @@ Rules:
       },
     });
 
+    const usage = calculateUsageCost((response as any).usage);
+
     // Depending on SDK version, you may need to adjust this accessor:
-    // Here we assume .output_text is the JSON string.
     const outputText = (response as any).output_text as string;
     const parsed = JSON.parse(outputText);
 
@@ -212,9 +259,6 @@ Rules:
     if (parsed.debug_notes) {
       console.log(`AI debug_notes for item ${itemId}:`, parsed.debug_notes);
     }
-
-    // If you later add a column (e.g. items.ai_debug_notes TEXT),
-    // you could include: ai_debug_notes: parsed.debug_notes in the update below.
 
     // Fetch current status to advance from "new" -> "identified"
     const { data: currentItem } = await supabase
@@ -249,6 +293,13 @@ Rules:
       throw new Error(updateError.message);
     }
 
+    // Best-effort usage logging
+    try {
+      await logUsage(supabase, user.id, itemId, usage);
+    } catch (logErr) {
+      console.error('Failed to log AI usage', logErr);
+    }
+
     return NextResponse.json({
       success: true,
       valuation: {
@@ -266,6 +317,7 @@ Rules:
       debugNotes: parsed.debug_notes,
       costBasis,
       status: newStatus,
+      usage,
     });
   } catch (e: any) {
     console.error('Item analysis failed', e);
