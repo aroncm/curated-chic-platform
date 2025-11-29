@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
+import type { Database } from '@/types/supabase';
 import { z } from 'zod';
 
 const CreateSourceSchema = z.object({
@@ -16,7 +17,7 @@ const CreateSourceSchema = z.object({
 });
 
 export async function GET() {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerClient() as any;
   const { data, error } = await supabase
     .from('acquisition_sources')
     .select('*')
@@ -29,7 +30,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerClient() as any;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
       name: name.trim(),
       source_type: sourceType,
       notes: notes ?? null,
-    })
+    } as Database['public']['Tables']['acquisition_sources']['Insert'])
     .select('*')
     .single();
 
