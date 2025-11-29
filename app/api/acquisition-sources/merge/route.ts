@@ -52,7 +52,7 @@ export async function POST(req: Request) {
 
   const { error: updatePurchasesError } = await supabase
     .from('purchases')
-    .update({ source_id: toId })
+    .update({ source_id: toId } as Database['public']['Tables']['purchases']['Update'])
     .eq('source_id', fromId);
 
   if (updatePurchasesError) {
