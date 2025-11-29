@@ -476,6 +476,7 @@ export interface Database {
         ]
       }
 
+      item_tags: {
         Row: {
           item_id: string
           tag_id: string
@@ -541,3 +542,4 @@ export interface Database {
     }
   }
 }
+
