@@ -392,37 +392,7 @@ export interface Database {
         ]
       }
 
-      item_tags: {
-        Row: {
-          item_id: string
-          tag_id: string
-          created_at: string | null
-        }
-        Insert: {
-          item_id: string
-          tag_id: string
-          created_at?: string | null
-        }
-        Update: {
-          item_id?: string
-          tag_id?: string
-          created_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "item_tags_item_id_fkey"
-            columns: ["item_id"]
-            referencedRelation: "items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "item_tags_tag_id_fkey"
-            columns: ["tag_id"]
-            referencedRelation: "tags"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
+      
       ai_usage: {
         Row: {
           id: string
