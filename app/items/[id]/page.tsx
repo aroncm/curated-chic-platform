@@ -59,6 +59,8 @@ export default async function ItemDetailPage({
 
   if (!item) return <main>Item not found.</main>;
 
+  const itemData = item as any; //
+
   const { data: itemTags } = await supabase
     .from('item_tags')
     .select('tag_id')
@@ -79,14 +81,14 @@ export default async function ItemDetailPage({
 
   return (
     <main className="space-y-6">
-      <AiStatusBanner status={(item as any).ai_status} error={(item as any).ai_error} />
+      <AiStatusBanner status={(itemData as any).ai_status} error={(itemData as any).ai_error} />
 
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-semibold">{item.title}</h2>
+          <h2 className="text-xl font-semibold">{itemData.title}</h2>
           <p className="text-xs text-slate-500 mt-1">
             Status:{' '}
-            <span className="capitalize font-medium">{item.status}</span>
+            <span className="capitalize font-medium">{itemData.status}</span>
           </p>
         </div>
         <div className="flex gap-2">
