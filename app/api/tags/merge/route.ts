@@ -63,7 +63,7 @@ export async function POST(req: Request) {
   const itemIds = (itemRows ?? []).map((r: any) => r.item_id);
   if (itemIds.length > 0) {
     // 2) Upsert (item_id, toId) pairs
-    const rowsToInsert = itemIds.map(itemId => ({
+    const rowsToInsert = itemIds.map((itemId: any) => ({
       item_id: itemId,
       tag_id: toId,
     }));
