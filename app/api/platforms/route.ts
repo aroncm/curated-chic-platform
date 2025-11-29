@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import { z } from 'zod';
 
 const CreatePlatformSchema = z.object({
@@ -10,7 +9,7 @@ const CreatePlatformSchema = z.object({
 });
 
 export async function GET() {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from('listing_platforms')
     .select('*')
@@ -24,7 +23,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

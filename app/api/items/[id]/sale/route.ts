@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import { z } from 'zod';
 
 const SaleSchema = z.object({
@@ -15,7 +14,7 @@ export async function POST(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

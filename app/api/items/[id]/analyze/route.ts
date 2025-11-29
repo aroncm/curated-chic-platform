@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -64,7 +63,7 @@ export async function POST(
     );
   }
 
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = createSupabaseServerClient();
 
   // Auth
   const {

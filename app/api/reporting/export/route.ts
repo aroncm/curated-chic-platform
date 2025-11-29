@@ -1,6 +1,5 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createSupabaseServerClient } from '@/lib/supabaseClient';
 
 function csvEscape(value: string): string {
   const needsQuote = /[",\n]/.test(value);
@@ -9,7 +8,7 @@ function csvEscape(value: string): string {
 }
 
 export async function GET(req: Request) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

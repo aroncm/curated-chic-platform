@@ -1,5 +1,4 @@
-import { cookies } from 'next/headers';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -9,7 +8,7 @@ const CreateCategorySchema = z.object({
 });
 
 export async function GET() {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = createSupabaseServerClient();
   const { data: categories, error } = await supabase
     .from('categories')
     .select('*')
@@ -23,7 +22,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
