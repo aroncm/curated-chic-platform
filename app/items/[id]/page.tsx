@@ -122,12 +122,12 @@ export default async function ItemDetailPage({
             <h3 className="font-semibold mb-2">Identification & valuation</h3>
             <p>
               <span className="font-medium">AI category (free-text):</span>{' '}
-              {item.category || '—'}
+              {itemData.category || '—'}
             </p>
             <CategorySelector
-              itemId={item.id}
-              initialCategoryId={item.category_id}
-              aiCategory={item.category}
+              itemId={itemData.id}
+              initialCategoryId={itemData.category_id}
+              aiCategory={itemData.category}
             />
             <p className="mt-2">
               <span className="font-medium">Brand/maker:</span>{' '}
@@ -179,27 +179,27 @@ export default async function ItemDetailPage({
               Condition & location
             </h4>
             <ConditionSelector
-              itemId={item.id}
-              initialGrade={item.condition_grade}
-              initialIsRestored={item.is_restored}
-              initialSummary={item.condition_summary}
+              itemId={itemData.id}
+              initialGrade={itemData.condition_grade}
+              initialIsRestored={itemData.is_restored}
+              initialSummary={itemData.condition_summary}
             />
             <div className="mt-3">
               <LocationSelector
-                itemId={item.id}
-                initialLocationId={item.location_id}
+                itemId={itemData.id}
+                initialLocationId={itemData.location_id}
               />
             </div>
           </div>
 
           <div className="border-t pt-3">
-            <TagSelector itemId={item.id} initialTagIds={initialTagIds} />
+            <TagSelector itemId={itemData.id} initialTagIds={initialTagIds} />
           </div>
         </div>
 
         {/* Right panel: listing meta & copy */}
         <div className="space-y-4">
-          <ListingMetaEditor itemId={item.id} initialListing={listing} />
+          <ListingMetaEditor itemId={itemData.id} initialListing={listing} />
           {listing ? (
             <ListingCopy listingId={listing.id} />
           ) : (
@@ -217,7 +217,7 @@ export default async function ItemDetailPage({
       {/* Sales & profit editor */}
       <section>
         <SalesEditor
-          itemId={item.id}
+          itemId={itemData.id}
           listingId={listing?.id}
           initialSale={sale}
           costBasis={costBasis}
