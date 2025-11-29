@@ -8,7 +8,7 @@ const CreateLocationSchema = z.object({
 });
 
 export async function GET() {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerClient() as any;
 
   const { data, error } = await supabase
     .from('inventory_locations')
@@ -23,7 +23,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerClient() as any;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     .insert({
       name: name.trim(),
       notes: notes ?? null,
-    })
+    } as any)
     .select('*')
     .single();
 
