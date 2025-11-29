@@ -94,7 +94,7 @@ export async function POST(
       return NextResponse.json({ error: tagsError.message }, { status: 500 });
     }
 
-    const existingIds = new Set((existingTags ?? []).map(t => t.id));
+    const existingIds = new Set((existingTags ?? []).map((t: any) => t.id));
     const missing = tagIds.filter(id => !existingIds.has(id));
     if (missing.length > 0) {
       return NextResponse.json(
