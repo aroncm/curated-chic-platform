@@ -8,7 +8,7 @@ const MergeSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerClient() as any;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
 
   const { error: updateListingsError } = await supabase
     .from('listings')
-    .update({ platform_id: toId })
+    .update({ platform_id: toId } as any)
     .eq('platform_id', fromId);
 
   if (updateListingsError) {
