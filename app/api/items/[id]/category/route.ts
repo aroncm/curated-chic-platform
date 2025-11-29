@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import { z } from 'zod';
 
@@ -7,8 +7,8 @@ const BodySchema = z.object({
 });
 
 export async function POST(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = createSupabaseServerClient();
   const {
@@ -19,7 +19,7 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const itemId = params.id;
+  const { id: itemId } = await params;
   const json = await req.json();
   const parsed = BodySchema.safeParse(json);
 

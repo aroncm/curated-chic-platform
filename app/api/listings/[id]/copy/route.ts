@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import OpenAI from 'openai';
 
@@ -53,8 +53,8 @@ async function logUsage(
 }
 
 export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } }
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json(
@@ -73,7 +73,7 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const listingId = params.id;
+  const { id: listingId } = await params;
 
   // Fetch listing + related item, platform, images, purchase
   const { data: listing, error: listingError } = await supabase
