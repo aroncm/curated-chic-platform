@@ -79,7 +79,7 @@ export default async function ItemDetailPage({
 
   return (
     <main className="space-y-6">
-      <AiStatusBanner status={item.ai_status} error={item.ai_error} />
+      <AiStatusBanner status={(item as any).ai_status} error={(item as any).ai_error} />
 
       <div className="flex justify-between items-center">
         <div>
