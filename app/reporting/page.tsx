@@ -145,7 +145,7 @@ export default async function ReportingPage({
 
     if (!usageError && usageData) {
       aiUsage = {
-        totalCost: usageData.reduce(
+        totalCost: (usageData as any[]).reduce(
           (sum, u) => sum + (u.total_cost_usd ?? 0),
           0
         ),
