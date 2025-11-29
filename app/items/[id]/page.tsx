@@ -62,7 +62,7 @@ export default async function ItemDetailPage({
   const { data: itemTags } = await supabase
     .from('item_tags')
     .select('tag_id')
-    .eq('item_id', item.id);
+    .eq('item_id', (item as any).id);
 
   const initialTagIds: string[] = itemTags?.map((t: any) => t.tag_id) ?? [];
 
