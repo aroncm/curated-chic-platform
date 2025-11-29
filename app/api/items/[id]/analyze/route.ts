@@ -50,7 +50,7 @@ async function logUsage(
     prompt_tokens: usage.prompt_tokens,
     completion_tokens: usage.completion_tokens,
     total_cost_usd: usage.total_cost_usd,
-  });
+  } as any);
 }
 
 export async function POST(
@@ -64,7 +64,7 @@ export async function POST(
     );
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerClient() as any;
 
   // Auth
   const {
