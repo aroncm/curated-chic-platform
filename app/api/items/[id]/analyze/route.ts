@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
+import type { Database } from '@/types/supabase';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -34,7 +35,7 @@ function calculateUsageCost(rawUsage: any): Usage {
 }
 
 async function logUsage(
-  supabase: ReturnType<typeof createRouteHandlerClient>,
+  supabase: ReturnType<typeof createSupabaseServerClient>,
   userId: string,
   itemId: string,
   usage: Usage
