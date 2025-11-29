@@ -4,14 +4,14 @@ import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+
 export function AuthForm() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  const supabase = createClient<Database>(supabaseUrl, supabaseKey);
-
-  // …keep the rest of your state and handlers unchanged…
-}
-
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
