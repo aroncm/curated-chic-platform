@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
+import type { Database } from '@/types/supabase';
 import { z } from 'zod';
 
 const MergeSchema = z.object({
