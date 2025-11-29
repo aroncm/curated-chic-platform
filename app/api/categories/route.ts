@@ -8,7 +8,7 @@ const CreateCategorySchema = z.object({
 });
 
 export async function GET() {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerClient() as any;
   const { data: categories, error } = await supabase
     .from('categories')
     .select('*')
@@ -22,7 +22,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerClient() as any;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     .insert({
       name: name.trim(),
       parent_id: parentId ?? null,
-    })
+    } as any)
     .select('*')
     .single();
 
