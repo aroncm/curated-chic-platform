@@ -131,27 +131,27 @@ export default async function ItemDetailPage({
             />
             <p className="mt-2">
               <span className="font-medium">Brand/maker:</span>{' '}
-              {item.brand_or_maker || '—'}
+              {itemData.brand_or_maker || '—'}
             </p>
             <p>
               <span className="font-medium">Style/era:</span>{' '}
-              {item.style_or_era || '—'}
+              {itemData.style_or_era || '—'}
             </p>
             <p>
               <span className="font-medium">Material:</span>{' '}
-              {item.material || '—'}
+              {itemData.material || '—'}
             </p>
             <p>
               <span className="font-medium">Color:</span>{' '}
-              {item.color || '—'}
+              {itemData.color || '—'}
             </p>
             <p>
               <span className="font-medium">Dimensions (approx):</span>{' '}
-              {item.dimensions_guess || '—'}
+              {itemData.dimensions_guess || '—'}
             </p>
             <p className="mt-2">
               <span className="font-medium">Price range:</span>{' '}
-              {item.estimated_low_price && item.estimated_high_price
+              {itemData.estimated_low_price && item.estimated_high_price
                 ? `$${Number(item.estimated_low_price).toFixed(
                     0
                   )} – $${Number(item.estimated_high_price).toFixed(0)}`
@@ -159,7 +159,7 @@ export default async function ItemDetailPage({
             </p>
             <p>
               <span className="font-medium">Suggested list price:</span>{' '}
-              {item.suggested_list_price
+              {itemData.suggested_list_price
                 ? `$${Number(item.suggested_list_price).toFixed(0)}`
                 : '—'}
             </p>
