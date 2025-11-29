@@ -7,7 +7,7 @@ const CreateTagSchema = z.object({
 });
 
 export async function GET() {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerClient() as any;
   const { data, error } = await supabase
     .from('tags')
     .select('*')
@@ -21,7 +21,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerClient() as any;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -44,9 +44,7 @@ export async function POST(req: Request) {
 
   const { data, error } = await supabase
     .from('tags')
-    .insert({
-      name: name.trim(),
-    })
+    .insert({ name: name.trim() } as any)
     .select('*')
     .single();
 
