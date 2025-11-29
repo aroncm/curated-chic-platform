@@ -59,19 +59,19 @@ export default async function ItemDetailPage({
 
   if (!item) return <main>Item not found.</main>;
 
-  const itemData = item as any; //
+  const itemData = item as any;
 
   const { data: itemTags } = await supabase
-    .from('item_tags')
-    .select('tag_id')
-    .eq('item_id', (item as any).id);
+  .from('item_tags')
+  .select('tag_id')
+  .eq('item_id', itemData.id);
 
   const initialTagIds: string[] = itemTags?.map((t: any) => t.tag_id) ?? [];
 
-  const images = (item as any).item_images || [];
-  const purchase = (item as any).purchases?.[0];
-  const listing = (item as any).listings?.[0];
-  const sale = (item as any).sales?.[0];
+  const images = (itemData as any).item_images || [];
+  const purchase = (itemData as any).purchases?.[0];
+  const listing = (itemData as any).listings?.[0];
+  const sale = (itemData as any).sales?.[0];
 
   const costBasis =
     purchase?.purchase_price != null
@@ -92,7 +92,7 @@ export default async function ItemDetailPage({
           </p>
         </div>
         <div className="flex gap-2">
-          <form action={`/api/items/${item.id}/analyze`} method="post">
+          <form action={`/api/items/${itemData.id}/analyze`} method="post">
             <button className="bg-emerald-600 text-white px-4 py-2 rounded text-sm">
               Run AI analysis
             </button>
