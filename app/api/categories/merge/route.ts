@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
+import type { Database } from '@/types/supabase';
 import { z } from 'zod';
 
 const MergeSchema = z.object({
@@ -8,7 +9,7 @@ const MergeSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseServerClient() as any;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
   // Repoint items.category_id
   const { error: updateItemsError } = await supabase
     .from('items')
-    .update({ category_id: toId })
+    .update({ category_id: toId } as any)
     .eq('category_id', fromId);
 
   if (updateItemsError) {
