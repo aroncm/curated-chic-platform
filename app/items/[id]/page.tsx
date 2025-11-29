@@ -151,16 +151,16 @@ export default async function ItemDetailPage({
             </p>
             <p className="mt-2">
               <span className="font-medium">Price range:</span>{' '}
-              {itemData.estimated_low_price && item.estimated_high_price
-                ? `$${Number(item.estimated_low_price).toFixed(
+              {itemData.estimated_low_price && itemData.estimated_high_price
+                ? `$${Number(itemData.estimated_low_price).toFixed(
                     0
-                  )} – $${Number(item.estimated_high_price).toFixed(0)}`
+                  )} – $${Number(itemData.estimated_high_price).toFixed(0)}`
                 : '—'}
             </p>
             <p>
               <span className="font-medium">Suggested list price:</span>{' '}
               {itemData.suggested_list_price
-                ? `$${Number(item.suggested_list_price).toFixed(0)}`
+                ? `$${Number(itemData.suggested_list_price).toFixed(0)}`
                 : '—'}
             </p>
             {purchase && (
