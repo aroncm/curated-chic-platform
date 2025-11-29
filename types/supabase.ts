@@ -302,7 +302,7 @@ export interface Database {
           id: string
           item_id: string
           platform_id: string | null
-          status: Database["public"]["Enums"]["listing_status"]
+          status: string
           listing_url: string | null
           listing_price: number | null
           shipping_price: number | null
@@ -314,7 +314,7 @@ export interface Database {
           id?: string
           item_id: string
           platform_id?: string | null
-          status?: Database["public"]["Enums"]["listing_status"]
+          status?: string
           listing_url?: string | null
           listing_price?: number | null
           shipping_price?: number | null
@@ -326,7 +326,7 @@ export interface Database {
           id?: string
           item_id?: string
           platform_id?: string | null
-          status?: Database["public"]["Enums"]["listing_status"]
+          status?: string
           listing_url?: string | null
           listing_price?: number | null
           shipping_price?: number | null
@@ -349,6 +349,7 @@ export interface Database {
           }
         ]
       }
+
 
       sales: {
         Row: {
