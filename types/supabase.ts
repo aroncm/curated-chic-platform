@@ -65,26 +65,27 @@ export interface Database {
         Row: {
           id: string
           name: string
-          source_type: Database["public"]["Enums"]["acquisition_source_type"]
+          source_type: string
           notes: string | null
           created_at: string | null
         }
         Insert: {
           id?: string
           name: string
-          source_type?: Database["public"]["Enums"]["acquisition_source_type"]
+          source_type?: string
           notes?: string | null
           created_at?: string | null
         }
         Update: {
           id?: string
           name?: string
-          source_type?: Database["public"]["Enums"]["acquisition_source_type"]
+          source_type?: string
           notes?: string | null
           created_at?: string | null
         }
         Relationships: []
       }
+
 
       listing_platforms: {
         Row: {
@@ -135,7 +136,7 @@ export interface Database {
           id: string
           owner_id: string
           title: string
-          status: Database["public"]["Enums"]["item_status"]
+          status: string
           category: string | null
           brand_or_maker: string | null
           style_or_era: string | null
@@ -146,11 +147,11 @@ export interface Database {
           estimated_low_price: number | null
           estimated_high_price: number | null
           suggested_list_price: number | null
-          ai_status: Database["public"]["Enums"]["ai_status"]
+          ai_status: string
           ai_error: string | null
           category_id: string | null
           location_id: string | null
-          condition_grade: Database["public"]["Enums"]["item_condition_grade"] | null
+          condition_grade: string | null
           is_restored: boolean
           is_deleted: boolean
           created_at: string | null
@@ -159,7 +160,7 @@ export interface Database {
           id?: string
           owner_id: string
           title: string
-          status?: Database["public"]["Enums"]["item_status"]
+          status?: string
           category?: string | null
           brand_or_maker?: string | null
           style_or_era?: string | null
@@ -170,11 +171,11 @@ export interface Database {
           estimated_low_price?: number | null
           estimated_high_price?: number | null
           suggested_list_price?: number | null
-          ai_status?: Database["public"]["Enums"]["ai_status"]
+          ai_status?: string
           ai_error?: string | null
           category_id?: string | null
           location_id?: string | null
-          condition_grade?: Database["public"]["Enums"]["item_condition_grade"] | null
+          condition_grade?: string | null
           is_restored?: boolean
           is_deleted?: boolean
           created_at?: string | null
@@ -183,7 +184,7 @@ export interface Database {
           id?: string
           owner_id?: string
           title?: string
-          status?: Database["public"]["Enums"]["item_status"]
+          status?: string
           category?: string | null
           brand_or_maker?: string | null
           style_or_era?: string | null
@@ -194,15 +195,16 @@ export interface Database {
           estimated_low_price?: number | null
           estimated_high_price?: number | null
           suggested_list_price?: number | null
-          ai_status?: Database["public"]["Enums"]["ai_status"]
+          ai_status?: string
           ai_error?: string | null
           category_id?: string | null
           location_id?: string | null
-          condition_grade?: Database["public"]["Enums"]["item_condition_grade"] | null
+          condition_grade?: string | null
           is_restored?: boolean
           is_deleted?: boolean
           created_at?: string | null
         }
+
         Relationships: [
           {
             foreignKeyName: "items_category_id_fkey"
