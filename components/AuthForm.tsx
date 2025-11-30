@@ -16,22 +16,31 @@ export function AuthForm() {
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   if (!email.trim()) return;
+
   setStatus('sending');
   setError(null);
+
+  const redirectTo =
+    `${process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin}/auth/callback`;
+
   const { error: signInError } = await supabase.auth.signInWithOtp({
     email: email.trim(),
     options: {
-      emailRedirectTo: `${window.location.origin}/auth/callback`,
-      // flowType not supported in this client version
+      emailRedirectTo: redirectTo,
+      // If you’ve upgraded to the latest supabase-js, you can uncomment the next line
+      // flowType: 'pkce',
     },
   });
+
   if (signInError) {
     setError(signInError.message);
     setStatus('error');
     return;
   }
+
   setStatus('sent');
 };
+
 
 
 
