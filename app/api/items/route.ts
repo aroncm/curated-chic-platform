@@ -45,14 +45,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to create item' }, { status: 500 });
     }
 
+    const itemId = (item as any).id as string;
+    const itemTitle = (item as any).title as string;
+
     // Upload images to Supabase Storage
     const imageUrls: string[] = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const fileExt = file.name.split('.').pop();
-      const fileName = `${item.id}/${Date.now()}-${i}.${fileExt}`;
+      const fileName = `${itemId}/${Date.now()}-${i}.${fileExt}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('item-images')
         .upload(fileName, file, {
           contentType: file.type,
@@ -62,7 +65,7 @@ export async function POST(req: NextRequest) {
       if (uploadError) {
         console.error('Failed to upload image:', uploadError);
         // Clean up: delete the item if image upload fails
-        await supabase.from('items').delete().eq('id', item.id);
+        await supabase.from('items').delete().eq('id', itemId);
         return NextResponse.json({ error: 'Failed to upload images' }, { status: 500 });
       }
 
@@ -77,7 +80,7 @@ export async function POST(req: NextRequest) {
       const { error: imageError } = await supabase
         .from('item_images')
         .insert({
-          item_id: item.id,
+          item_id: itemId,
           url: publicUrl,
         });
 
@@ -89,8 +92,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       item: {
-        id: item.id,
-        title: item.title,
+        id: itemId,
+        title: itemTitle,
         imageCount: imageUrls.length,
       },
     });
