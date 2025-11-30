@@ -20,14 +20,33 @@ export function createSupabaseServerClient(): SupabaseClient<Database> {
         return cookieStore?.get?.(name)?.value;
       },
       set(name: string, value: string, options?: any) {
-        cookieStore?.set?.(name, value, { path: '/', ...options });
+        try {
+          cookieStore?.set?.(name, value, {
+            path: '/',
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            httpOnly: true,
+            maxAge: 60 * 60 * 24 * 7, // 7 days
+            ...options,
+          });
+        } catch (error) {
+          // Handle cookies() being called in a non-async context
+          console.error('Error setting cookie:', error);
+        }
       },
       remove(name: string, options?: any) {
-        cookieStore?.set?.(name, '', {
-          path: '/',
-          expires: new Date(0),
-          ...options,
-        });
+        try {
+          cookieStore?.set?.(name, '', {
+            path: '/',
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            httpOnly: true,
+            expires: new Date(0),
+            ...options,
+          });
+        } catch (error) {
+          console.error('Error removing cookie:', error);
+        }
       },
     },
   });
