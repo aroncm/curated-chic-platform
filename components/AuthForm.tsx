@@ -29,9 +29,10 @@ const { error: signInError } = await supabase.auth.signInWithOtp({
   email: email.trim(),
   options: {
     emailRedirectTo: redirectTo,
-    flowType: 'pkce', // now supported after the upgrade
+    // remove flowType: 'pkce'
   },
 });
+
 
   if (signInError) {
     setError(signInError.message);
