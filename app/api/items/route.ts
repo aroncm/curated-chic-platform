@@ -15,23 +15,18 @@ export async function POST(req: NextRequest) {
 
   try {
     const formData = await req.formData();
-    const title = formData.get('title') as string;
     const files = formData.getAll('images') as File[];
-
-    if (!title || !title.trim()) {
-      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
-    }
 
     if (files.length === 0) {
       return NextResponse.json({ error: 'At least one image is required' }, { status: 400 });
     }
 
-    // Create the item first
+    // Create the item with a temporary title - AI will set the real title
     const { data: item, error: itemError } = await supabase
       .from('items')
       .insert({
         owner_id: user.id,
-        title: title.trim(),
+        title: 'Analyzing...', // Temporary title until AI identifies it
         status: 'new',
         ai_status: 'idle',
         is_deleted: false,

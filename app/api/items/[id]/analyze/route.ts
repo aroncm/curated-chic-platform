@@ -274,6 +274,7 @@ Rules:
       .from('items')
       .update({
         status: newStatus,
+        title: parsed.category, // AI sets the title based on what it identifies
         category: parsed.category,
         brand_or_maker: parsed.brand_or_maker,
         style_or_era: parsed.style_or_era,
