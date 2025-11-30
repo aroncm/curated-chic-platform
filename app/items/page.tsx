@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
+import { UploadItemForm } from '@/components/UploadItemForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,12 +36,11 @@ export default async function ItemsPage() {
   }
 
   return (
-    <main className="space-y-4">
+    <main className="space-y-6">
+      <UploadItemForm />
+
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Items</h2>
-        <p className="text-xs text-slate-500">
-          (You can add a “New Item” flow later; for now, create test rows in Supabase.)
-        </p>
+        <h2 className="text-lg font-semibold">Your Items</h2>
       </div>
       <table className="w-full text-xs md:text-sm bg-white rounded shadow-sm">
         <thead className="bg-slate-100">
