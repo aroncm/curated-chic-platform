@@ -6,7 +6,6 @@ export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get('code');
   const redirectTo = new URL('/items', req.url);
   const res = NextResponse.redirect(redirectTo);
-  const domain = req.nextUrl.hostname;
 
   if (!code) return res;
 
@@ -23,7 +22,6 @@ export async function GET(req: NextRequest) {
             name,
             value,
             path: '/',
-            domain,
             ...options,
           });
         },
@@ -32,7 +30,6 @@ export async function GET(req: NextRequest) {
             name,
             value: '',
             path: '/',
-            domain,
             expires: new Date(0),
             ...options,
           });
@@ -43,7 +40,6 @@ export async function GET(req: NextRequest) {
 
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
-    // If exchange fails, send back to /auth with the error
     return NextResponse.redirect(
       new URL(`/auth?error=${encodeURIComponent(error.message)}`, req.url)
     );
@@ -51,4 +47,5 @@ export async function GET(req: NextRequest) {
 
   return res;
 }
+
 
