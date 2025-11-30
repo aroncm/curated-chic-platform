@@ -8,10 +8,8 @@ const nextConfig = {
   experimental: {
     missingSuspenseWithCSRBailout: false,
   },
-  onDemandEntries: {
-    maxInactiveAge: 25 * 1000,
-    pagesBufferLength: 2,
-  },
+  // Use standalone output for serverless deployment
+  output: 'standalone',
 };
 
 export default nextConfig;
