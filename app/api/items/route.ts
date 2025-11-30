@@ -61,7 +61,13 @@ export async function POST(req: NextRequest) {
         console.error('Failed to upload image:', uploadError);
         // Clean up: delete the item if image upload fails
         await supabase.from('items').delete().eq('id', itemId);
-        return NextResponse.json({ error: 'Failed to upload images' }, { status: 500 });
+
+        // Provide helpful error message
+        const errorMsg = uploadError.message.includes('not found') || uploadError.message.includes('bucket')
+          ? 'Storage bucket not configured. Please create "item-images" bucket in Supabase Storage.'
+          : `Failed to upload images: ${uploadError.message}`;
+
+        return NextResponse.json({ error: errorMsg }, { status: 500 });
       }
 
       // Get public URL
@@ -94,8 +100,21 @@ export async function POST(req: NextRequest) {
     });
   } catch (e: any) {
     console.error('Create item error:', e);
+
+    // Check for specific error types
+    let errorMessage = 'Failed to create item';
+    if (e.message) {
+      if (e.message.includes('bucket') || e.message.includes('storage')) {
+        errorMessage = 'Storage bucket "item-images" not found. Please create it in your Supabase dashboard under Storage.';
+      } else if (e.message.includes('JWT') || e.message.includes('auth')) {
+        errorMessage = 'Authentication error. Please try logging in again.';
+      } else {
+        errorMessage = e.message;
+      }
+    }
+
     return NextResponse.json(
-      { error: 'Failed to create item', details: e.message },
+      { error: errorMessage },
       { status: 500 }
     );
   }
