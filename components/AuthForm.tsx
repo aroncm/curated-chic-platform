@@ -21,16 +21,17 @@ export function AuthForm() {
   setError(null);
 
   const redirectTo =
-    `${process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin}/auth/callback`;
+  `${process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin}/auth/callback`;
 
-  const { error: signInError } = await supabase.auth.signInWithOtp({
-    email: email.trim(),
-    options: {
-      emailRedirectTo: redirectTo,
-      // If you’ve upgraded to the latest supabase-js, you can uncomment the next line
-      // flowType: 'pkce',
-    },
-  });
+  console.log('redirectTo used for magic link:', redirectTo);
+
+const { error: signInError } = await supabase.auth.signInWithOtp({
+  email: email.trim(),
+  options: {
+    emailRedirectTo: redirectTo,
+    flowType: 'pkce', // now supported after the upgrade
+  },
+});
 
   if (signInError) {
     setError(signInError.message);
