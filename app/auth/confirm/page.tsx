@@ -1,16 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/supabase';
-
-const supabase = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export default function AuthConfirmPage() {
-  const [message, setMessage] = useState('Completing sign-in…');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -19,17 +11,27 @@ export default function AuthConfirmPage() {
     const access_token = hashParams.get('access_token');
     const refresh_token = hashParams.get('refresh_token');
 
-    const finish = () => window.location.replace('/items');
-
     (async () => {
       try {
-        if (access_token && refresh_token) {
-          const { error } = await supabase.auth.setSession({ access_token, refresh_token });
-          if (error) throw error;
-          finish();
-          return;
+        if (!access_token || !refresh_token) {
+          throw new Error('No tokens found in URL.');
         }
-        throw new Error('No tokens found in URL.');
+
+        // Call server-side API to set session in httpOnly cookies
+        const response = await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token, refresh_token }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+          throw new Error(data.error || 'Failed to set session');
+        }
+
+        // Session is now set in httpOnly cookies, redirect to items
+        window.location.replace('/items');
       } catch (e: any) {
         console.error('Auth confirm error', e);
         setError(e.message || 'Authentication failed.');
@@ -48,5 +50,5 @@ export default function AuthConfirmPage() {
     );
   }
 
-  return <main className="p-4 text-sm">{message}</main>;
+  return <main className="p-4 text-sm">Completing sign-in…</main>;
 }
