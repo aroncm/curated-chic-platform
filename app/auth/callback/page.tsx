@@ -38,6 +38,7 @@ export default function AuthCallbackPage() {
         }
         throw new Error('No code or tokens found.');
       } catch (e: any) {
+         console.error('callback error', e);
         setError(e.message || 'Auth callback failed.');
       }
     })();
