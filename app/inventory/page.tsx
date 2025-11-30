@@ -1,5 +1,7 @@
 import { InventoryManager } from '@/components/InventoryManager';
 
+export const dynamic = 'force-dynamic';
+
 export default function InventoryPage() {
   return (
     <main className="space-y-6">

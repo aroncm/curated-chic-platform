@@ -9,6 +9,8 @@ import { ConditionSelector } from '@/components/ConditionSelector';
 import { LocationSelector } from '@/components/LocationSelector';
 import { TagSelector } from '@/components/TagSelector';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ItemDetailPage({
   params,
 }: {

@@ -1,6 +1,8 @@
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 type SearchParams = {
   from?: string;
   to?: string;
