@@ -22,7 +22,7 @@ export function AuthForm() {
     email: email.trim(),
     options: {
       emailRedirectTo: `${window.location.origin}/auth/callback`,
-      flowType: 'pkce', // ensures the magic link is ?code=... for the callback
+      // flowType not supported in this client version
     },
   });
   if (signInError) {
@@ -32,6 +32,7 @@ export function AuthForm() {
   }
   setStatus('sent');
 };
+
 
 
   return (
