@@ -14,21 +14,25 @@ export function AuthForm() {
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) return;
-    setStatus('sending');
-    setError(null);
-    const { error: signInError } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
-    });
-    if (signInError) {
-      setError(signInError.message);
-      setStatus('error');
-      return;
-    }
-    setStatus('sent');
-  };
+  e.preventDefault();
+  if (!email.trim()) return;
+  setStatus('sending');
+  setError(null);
+  const { error: signInError } = await supabase.auth.signInWithOtp({
+    email: email.trim(),
+    options: {
+      emailRedirectTo: `${window.location.origin}/auth/callback`,
+      flowType: 'pkce', // ensures the magic link is ?code=... for the callback
+    },
+  });
+  if (signInError) {
+    setError(signInError.message);
+    setStatus('error');
+    return;
+  }
+  setStatus('sent');
+};
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 text-sm">
