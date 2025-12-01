@@ -29,7 +29,8 @@ export default async function InventoryPage() {
       status,
       item_images(url),
       purchases(purchase_price, additional_costs),
-      listings(listing_price, listing_platforms(name))
+      listings(listing_price, date_listed, listing_platforms(name)),
+      sales(sale_price, sale_date)
     `
     )
     .eq('owner_id', user.id)
@@ -50,6 +51,7 @@ export default async function InventoryPage() {
   const inventoryItems = (allItems ?? []).map((item: any) => {
     const purchase = item.purchases?.[0];
     const listing = item.listings?.[0];
+    const sale = item.sales?.[0];
     const cost = purchase?.purchase_price
       ? Number(purchase.purchase_price) +
         (purchase.additional_costs ? Number(purchase.additional_costs) : 0)
@@ -62,7 +64,9 @@ export default async function InventoryPage() {
       platform: listing?.listing_platforms?.name || null,
       cost,
       listing_price: listing?.listing_price ? Number(listing.listing_price) : null,
-      sales_price: null, // TODO: Add sales data when available
+      sales_price: sale?.sale_price ? Number(sale.sale_price) : null,
+      date_listed: listing?.date_listed || null,
+      date_sold: sale?.sale_date || null,
       thumbnail_url: item.item_images?.[0]?.url || null,
     };
   });

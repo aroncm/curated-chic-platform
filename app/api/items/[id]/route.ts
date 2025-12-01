@@ -59,16 +59,25 @@ export async function PATCH(
       }
     }
 
-    if (body.listing_price !== undefined) {
-      const listingValue = Number(body.listing_price);
-      if (!isNaN(listingValue) && listingValue > 0) {
+    if (body.listing_price !== undefined || body.date_listed !== undefined) {
+      const listingData: any = { item_id: id };
+
+      if (body.listing_price !== undefined) {
+        const listingValue = Number(body.listing_price);
+        if (!isNaN(listingValue) && listingValue > 0) {
+          listingData.listing_price = listingValue;
+        }
+      }
+
+      if (body.date_listed !== undefined) {
+        listingData.date_listed = body.date_listed || null;
+      }
+
+      if (Object.keys(listingData).length > 1) {
         // Update or insert listing record
         const { error: listingError } = await supabase
           .from('listings')
-          .upsert({
-            item_id: id,
-            listing_price: listingValue,
-          }, {
+          .upsert(listingData, {
             onConflict: 'item_id',
           });
 
@@ -78,16 +87,25 @@ export async function PATCH(
       }
     }
 
-    if (body.sales_price !== undefined) {
-      const salesValue = Number(body.sales_price);
-      if (!isNaN(salesValue) && salesValue > 0) {
+    if (body.sales_price !== undefined || body.date_sold !== undefined) {
+      const salesData: any = { item_id: id };
+
+      if (body.sales_price !== undefined) {
+        const salesValue = Number(body.sales_price);
+        if (!isNaN(salesValue) && salesValue > 0) {
+          salesData.sale_price = salesValue;
+        }
+      }
+
+      if (body.date_sold !== undefined) {
+        salesData.sale_date = body.date_sold || null;
+      }
+
+      if (Object.keys(salesData).length > 1) {
         // Update or insert sale record
         const { error: saleError } = await supabase
           .from('sales')
-          .upsert({
-            item_id: id,
-            sale_price: salesValue,
-          }, {
+          .upsert(salesData, {
             onConflict: 'item_id',
           });
 

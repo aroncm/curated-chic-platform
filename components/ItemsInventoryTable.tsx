@@ -13,6 +13,8 @@ type ItemInventoryRow = {
   cost: number | null;
   listing_price: number | null;
   sales_price: number | null;
+  date_listed: string | null;
+  date_sold: string | null;
   thumbnail_url: string | null;
 };
 
@@ -34,6 +36,8 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
       cost: item.cost,
       listing_price: item.listing_price,
       sales_price: item.sales_price,
+      date_listed: item.date_listed,
+      date_sold: item.date_sold,
     });
   };
 
@@ -107,7 +111,9 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
               <th className="text-left px-4 py-3 font-semibold">Platform</th>
               <th className="text-left px-4 py-3 font-semibold">Cost</th>
               <th className="text-left px-4 py-3 font-semibold">Listing Price</th>
+              <th className="text-left px-4 py-3 font-semibold">Date Listed</th>
               <th className="text-left px-4 py-3 font-semibold">Sales Price</th>
+              <th className="text-left px-4 py-3 font-semibold">Date Sold</th>
               <th className="text-left px-4 py-3 font-semibold">Actions</th>
             </tr>
           </thead>
@@ -115,7 +121,7 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
             {items.length === 0 ? (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={10}
                   className="px-4 py-8 text-center text-slate-500 text-sm"
                 >
                   No items in inventory yet. Add items to get started.
@@ -258,6 +264,27 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
                       )}
                     </td>
 
+                    {/* Date Listed */}
+                    <td className="px-4 py-3">
+                      {isEditing ? (
+                        <input
+                          type="date"
+                          value={editValues.date_listed ?? item.date_listed ?? ''}
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              date_listed: e.target.value || null,
+                            })
+                          }
+                          className="w-32 px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      ) : (
+                        <span className="text-slate-700">
+                          {item.date_listed || '—'}
+                        </span>
+                      )}
+                    </td>
+
                     {/* Sales Price */}
                     <td className="px-4 py-3">
                       {isEditing ? (
@@ -281,6 +308,27 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
                           {item.sales_price != null
                             ? `$${Number(item.sales_price).toFixed(2)}`
                             : '—'}
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Date Sold */}
+                    <td className="px-4 py-3">
+                      {isEditing ? (
+                        <input
+                          type="date"
+                          value={editValues.date_sold ?? item.date_sold ?? ''}
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              date_sold: e.target.value || null,
+                            })
+                          }
+                          className="w-32 px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      ) : (
+                        <span className="text-slate-700">
+                          {item.date_sold || '—'}
                         </span>
                       )}
                     </td>
