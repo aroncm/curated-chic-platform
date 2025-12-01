@@ -184,28 +184,25 @@ Return ONLY JSON in this schema: no explanations, no extra text.
 `.trim();
 
   try {
-    const inputContent: any[] = [
+    const messages: any[] = [
       {
-        type: 'input_text',
-        text: `${systemPrompt}\n\n${itemContext}`,
+        role: 'system',
+        content: systemPrompt,
+      },
+      {
+        role: 'user',
+        content: primaryImageUrl
+          ? [
+              { type: 'text', text: itemContext },
+              { type: 'image_url', image_url: { url: primaryImageUrl } },
+            ]
+          : itemContext,
       },
     ];
 
-    if (primaryImageUrl) {
-      inputContent.push({
-        type: 'input_image',
-        image_url: primaryImageUrl,
-      });
-    }
-
-    const response = await (openai as any).responses.create({
+    const response = await openai.chat.completions.create({
       model: 'gpt-4o',
-      input: [
-        {
-          role: 'user',
-          content: inputContent,
-        },
-      ],
+      messages,
       response_format: {
         type: 'json_schema',
         json_schema: {
@@ -234,10 +231,13 @@ Return ONLY JSON in this schema: no explanations, no extra text.
       },
     });
 
-    const usage = calculateUsageCost((response as any).usage);
+    const usage = calculateUsageCost(response.usage);
 
-    const outputText = (response as any).output_text as string;
-    const parsed = JSON.parse(outputText);
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('No content in response');
+    }
+    const parsed = JSON.parse(content);
 
     // Best-effort usage logging
     try {

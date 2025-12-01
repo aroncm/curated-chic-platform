@@ -135,7 +135,10 @@ export function AnalysisResultsView({
           title: itemName.trim(),
           category: category.trim(),
           condition_summary: condition.trim(),
-          // Add other fields as needed
+          cost: cost ? Number(cost) : null,
+          listing_price: listingPrice ? Number(listingPrice) : null,
+          sales_price: salesPrice ? Number(salesPrice) : null,
+          // Note: inventory_location and sales_fees will be added in future updates
         }),
       });
 
@@ -151,11 +154,6 @@ export function AnalysisResultsView({
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleContinueToListing = async () => {
-    await handleSaveItem();
-    router.push(`/items/${itemId}/listing-management`);
   };
 
   const potentialProfit = costBasis
@@ -450,14 +448,20 @@ export function AnalysisResultsView({
             </div>
           </div>
 
-          {/* Save and Continue Button */}
-          <div className="pt-4">
+          {/* Action Buttons */}
+          <div className="pt-4 flex gap-4">
             <button
-              onClick={handleContinueToListing}
+              onClick={handleSaveItem}
               disabled={saving}
-              className="w-full bg-emerald-600 text-white px-6 py-4 rounded-lg text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-700 transition-colors"
+              className="flex-1 bg-slate-600 text-white px-6 py-4 rounded-lg text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700 transition-colors"
             >
-              {saving ? 'Saving...' : 'Save Item and Continue to Listing Management'}
+              {saving ? 'Saving...' : 'Save Item'}
+            </button>
+            <button
+              onClick={() => router.push('/inventory')}
+              className="flex-1 bg-emerald-600 text-white px-6 py-4 rounded-lg text-base font-semibold hover:bg-emerald-700 transition-colors"
+            >
+              Continue to Inventory Management
             </button>
           </div>
         </div>
