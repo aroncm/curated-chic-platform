@@ -132,9 +132,11 @@ export function AddItemForm() {
 
         {/* Image Upload */}
         <div>
-          <label htmlFor="images" className="block text-sm font-medium text-slate-700 mb-1">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
             Photos (1-{MAX_IMAGES} images)
           </label>
+
+          {/* Hidden file input */}
           <input
             type="file"
             id="images"
@@ -142,11 +144,40 @@ export function AddItemForm() {
             multiple
             onChange={handleFileSelect}
             disabled={uploading}
-            className="w-full text-sm disabled:opacity-50"
+            className="hidden"
           />
-          <p className="text-xs text-slate-500 mt-1">
-            Upload {MAX_IMAGES} photos for best AI analysis results
-          </p>
+
+          {/* Custom upload button */}
+          <button
+            type="button"
+            onClick={() => document.getElementById('images')?.click()}
+            disabled={uploading}
+            className="w-full px-4 py-8 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center gap-2"
+          >
+            {/* Upload Icon */}
+            <svg
+              className="w-10 h-10"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+
+            <div className="text-center">
+              <p className="text-sm font-medium">
+                {files.length > 0 ? 'Choose Different Photos' : 'Click to Upload Photos'}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                Upload {MAX_IMAGES} photos for best AI analysis results
+              </p>
+            </div>
+          </button>
         </div>
 
         {/* Image Previews */}
