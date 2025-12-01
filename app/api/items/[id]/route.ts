@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabaseClient';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const supabase = createSupabaseServerClient();
   const {
@@ -16,7 +16,7 @@ export async function PATCH(
 
   try {
     const body = await request.json();
-    const { id } = params;
+    const { id } = await params;
 
     // Update the item
     const { data, error } = await supabase
