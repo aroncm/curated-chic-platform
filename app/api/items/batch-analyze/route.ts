@@ -53,7 +53,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Process in batches of 3 to avoid timeouts
-    const results = [];
+    const results: Array<{
+      itemId: string;
+      status: 'success' | 'error';
+      error?: string;
+      data?: any;
+    }> = [];
 
     for (let i = 0; i < itemIds.length; i += BATCH_SIZE) {
       const batch = itemIds.slice(i, i + BATCH_SIZE);
