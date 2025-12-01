@@ -192,23 +192,24 @@ Rules:
 `.trim();
 
   try {
-    const inputContent: any[] = [
-      {
-        type: 'input_text',
-        text: systemPrompt,
-      },
-      {
-        type: 'input_image',
-        image_url: primaryImageUrl,
-      },
-    ];
-
-    const response = await (openai as any).responses.create({
+    // Use Chat Completions API (standard OpenAI API format)
+    const response = await openai.chat.completions.create({
       model: 'gpt-4o',
-      input: [
+      messages: [
         {
           role: 'user',
-          content: inputContent,
+          content: [
+            {
+              type: 'text',
+              text: systemPrompt,
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: primaryImageUrl,
+              },
+            },
+          ],
         },
       ],
       response_format: {
@@ -249,10 +250,10 @@ Rules:
       },
     });
 
-    const usage = calculateUsageCost((response as any).usage);
+    const usage = calculateUsageCost(response.usage);
 
-    // Depending on SDK version, you may need to adjust this accessor:
-    const outputText = (response as any).output_text as string;
+    // Parse JSON response from chat completion
+    const outputText = response.choices[0]?.message?.content || '{}';
     const parsed = JSON.parse(outputText);
 
     // Internal debug notes — not stored (yet), but logged so you can inspect reasoning.
