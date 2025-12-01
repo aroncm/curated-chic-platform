@@ -21,13 +21,10 @@ export default function RootLayout({
               <div className="font-semibold text-sm">VintageLab</div>
               <nav className="flex gap-4 text-xs">
                 <Link href="/items" className="hover:underline">
-                  Items
+                  Inventory
                 </Link>
                 <Link href="/reporting" className="hover:underline">
                   Reporting
-                </Link>
-                <Link href="/inventory" className="hover:underline">
-                  Inventory Management
                 </Link>
               </nav>
             </div>
