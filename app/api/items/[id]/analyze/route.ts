@@ -138,6 +138,7 @@ Your job is to:
    - If maker/brand or era is uncertain, use hedged language like:
      "likely", "in the style of", "circa", "appears to be", etc.
    - Do NOT invent a specific brand or designer if there is no strong visual evidence (logo, hallmark, iconic design).
+   - Look for specific identifying features: hallmarks, signatures, design patterns, construction methods.
 
 2. ESTIMATE DIMENSIONS
    - Provide approximate dimensions based on the photo and typical proportions for similar objects.
@@ -147,6 +148,7 @@ Your job is to:
    - Look for chips, cracks, scratches, cloudiness, label wear, discoloration, repairs, etc.
    - Summarize in a short, listing-ready condition blurb suitable for eBay/Etsy/Facebook.
    - Always include both positives and any flaws, even if minor.
+   - Be specific: "minor scratching to base" vs. "some wear"
 
 4. PRICING FOR US ONLINE RESALE
    - Assume resale on US online marketplaces (eBay, Etsy, Chairish, Facebook Marketplace, etc.), not retail MSRP.
@@ -159,13 +161,37 @@ Your job is to:
 5. SUGGESTED LIST PRICE
    - Suggest ONE practical list price in USD that balances speed vs. profit
      for a typical non-professional seller.
-   - This should usually be between the low and high estimate.
+   - This should usually be between the low and high estimate, closer to the middle.
 
-6. INTERNAL DEBUG NOTES (NOT FOR BUYERS)
-   - Provide a short explanation of how you arrived at the price range:
-     e.g. "similar Scandinavian art glass decanters sell for $80–150 on eBay;
-     visible wear on stopper, so I suggested $95 as a balanced list price."
-   - This is only for the seller/internal use and must NOT contain sensitive personal data.
+6. DETAILED REASONING (IMPORTANT - USER WILL SEE THIS)
+   - Provide a comprehensive explanation of your identification and pricing decisions.
+   - Structure your reasoning as follows:
+
+   **Identification Rationale:**
+   - What specific visual cues led you to this identification?
+   - What design elements, construction methods, or hallmarks did you observe?
+   - Why did you assign this particular era/style?
+   - If uncertain, explain what evidence is missing.
+
+   **Price Justification:**
+   - What comparable items did you consider?
+   - What recent sale prices or listings informed your estimate?
+   - How did condition affect the valuation?
+   - What market factors influenced your suggestion?
+   - Why is this a good price for a non-professional seller?
+
+   Example reasoning:
+   "This appears to be a mid-century Scandinavian art glass decanter based on the organic form,
+   smoky grey color, and controlled bubble inclusions typical of 1960s Nordic glasswork. However,
+   without a visible maker's mark, I cannot attribute it to a specific manufacturer like Holmegaard
+   or Riihimäki.
+
+   Similar unmarked Scandinavian decanters in comparable condition typically sell for $80-150 on
+   eBay and Etsy. The visible wear on the glass stopper (minor scratching, no chips) and light
+   cloudiness inside the neck reduce value from mint condition pieces ($180-250).
+
+   I suggest $95 as a balanced list price because it's below typical retail ($120-140) but above
+   quick-sale prices, giving you room to negotiate while attracting serious vintage glassware collectors."
 
 OUTPUT FORMAT (IMPORTANT):
 - You MUST return ONLY valid JSON matching this schema:
@@ -181,13 +207,15 @@ OUTPUT FORMAT (IMPORTANT):
   "estimated_low_price": number,
   "estimated_high_price": number,
   "suggested_list_price": number,
-  "debug_notes": string          // internal explanation of your reasoning
+  "reasoning": string            // DETAILED explanation (3-5 paragraphs, see format above)
 }
 
 Rules:
 - All prices must be numbers (no currency symbols) and in USD.
 - Never mention your own uncertainty about prices in the numeric fields;
   reflect uncertainty in the text fields using words like "approx.", "likely", etc.
+- The "reasoning" field should be 3-5 paragraphs, detailed enough for a user to understand
+  exactly how you arrived at your conclusions.
 - Do NOT include any extra fields or any text outside the JSON.
 `.trim();
 
@@ -236,7 +264,7 @@ Rules:
               estimated_low_price: { type: 'number' },
               estimated_high_price: { type: 'number' },
               suggested_list_price: { type: 'number' },
-              debug_notes: { type: 'string' },
+              reasoning: { type: 'string' },
             },
             required: [
               'category',
@@ -249,7 +277,7 @@ Rules:
               'estimated_low_price',
               'estimated_high_price',
               'suggested_list_price',
-              'debug_notes',
+              'reasoning',
             ],
             additionalProperties: false,
           },
@@ -263,9 +291,9 @@ Rules:
     const outputText = response.choices[0]?.message?.content || '{}';
     const parsed = JSON.parse(outputText);
 
-    // Internal debug notes — not stored (yet), but logged so you can inspect reasoning.
-    if (parsed.debug_notes) {
-      console.log(`AI debug_notes for item ${itemId}:`, parsed.debug_notes);
+    // Log reasoning for debugging
+    if (parsed.reasoning) {
+      console.log(`AI reasoning for item ${itemId}:`, parsed.reasoning);
     }
 
     // Fetch current status to advance from "new" -> "identified"
@@ -282,7 +310,7 @@ Rules:
       .from('items')
       .update({
         status: newStatus,
-        title: parsed.category, // AI sets the title based on what it identifies
+        // PRESERVE user's title - don't overwrite with AI category
         category: parsed.category,
         brand_or_maker: parsed.brand_or_maker,
         style_or_era: parsed.style_or_era,
@@ -293,6 +321,7 @@ Rules:
         estimated_low_price: parsed.estimated_low_price,
         estimated_high_price: parsed.estimated_high_price,
         suggested_list_price: parsed.suggested_list_price,
+        reasoning: parsed.reasoning, // Store detailed reasoning in database
         ai_status: 'complete',
         ai_error: null,
       })
@@ -322,8 +351,8 @@ Rules:
         estimated_low_price: parsed.estimated_low_price,
         estimated_high_price: parsed.estimated_high_price,
         suggested_list_price: parsed.suggested_list_price,
+        reasoning: parsed.reasoning, // Return reasoning to client
       },
-      debugNotes: parsed.debug_notes,
       costBasis,
       status: newStatus,
       usage,

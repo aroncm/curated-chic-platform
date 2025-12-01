@@ -1,7 +1,8 @@
 import Image from 'next/image';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import { AiStatusBanner } from '@/components/AiStatusBanner';
-import { ListingCopy } from '@/components/ListingCopy';
+import { AnalysisResultsView } from '@/components/AnalysisResultsView';
+import { ItemCopyGenerator } from '@/components/ItemCopyGenerator';
 import { SalesEditor } from '@/components/SalesEditor';
 import { ListingMetaEditor } from '@/components/ListingMetaEditor';
 import { CategorySelector } from '@/components/CategorySelector';
@@ -39,6 +40,7 @@ export default async function ItemDetailPage({
         'estimated_low_price',
         'estimated_high_price',
         'suggested_list_price',
+        'reasoning',
         'ai_status',
         'ai_error',
         'owner_id',
@@ -93,13 +95,15 @@ export default async function ItemDetailPage({
             <span className="capitalize font-medium">{itemData.status}</span>
           </p>
         </div>
-        <div className="flex gap-2">
-          <form action={`/api/items/${itemData.id}/analyze`} method="post">
-            <button className="bg-emerald-600 text-white px-4 py-2 rounded text-sm">
-              Run AI analysis
-            </button>
-          </form>
-        </div>
+        {itemData.ai_status === 'idle' && (
+          <div className="flex gap-2">
+            <form action={`/api/items/${itemData.id}/analyze`} method="post">
+              <button className="bg-emerald-600 text-white px-4 py-2 rounded text-sm">
+                Analyze This Item
+              </button>
+            </form>
+          </div>
+        )}
       </div>
 
       {images.length > 0 && (
@@ -115,6 +119,28 @@ export default async function ItemDetailPage({
             </div>
           ))}
         </div>
+      )}
+
+      {/* AI Analysis Results (if complete) */}
+      {itemData.ai_status === 'complete' && (
+        <AnalysisResultsView
+          itemId={itemData.id}
+          currentTitle={itemData.title}
+          analysis={{
+            category: itemData.category,
+            brand_or_maker: itemData.brand_or_maker,
+            style_or_era: itemData.style_or_era,
+            material: itemData.material,
+            color: itemData.color,
+            dimensions_guess: itemData.dimensions_guess,
+            condition_summary: itemData.condition_summary,
+            estimated_low_price: itemData.estimated_low_price,
+            estimated_high_price: itemData.estimated_high_price,
+            suggested_list_price: itemData.suggested_list_price,
+            reasoning: itemData.reasoning,
+          }}
+          costBasis={costBasis}
+        />
       )}
 
       <section className="grid md:grid-cols-2 gap-6">
@@ -202,16 +228,10 @@ export default async function ItemDetailPage({
         {/* Right panel: listing meta & copy */}
         <div className="space-y-4">
           <ListingMetaEditor itemId={itemData.id} initialListing={listing} />
-          {listing ? (
-            <ListingCopy listingId={listing.id} />
-          ) : (
-            <div className="bg-white p-4 rounded shadow-sm text-sm">
-              <h3 className="font-semibold mb-2">Listing copy</h3>
-              <p className="text-slate-500 text-xs">
-                Run AI analysis to generate suggested titles and descriptions
-                for eBay, Facebook, and Etsy.
-              </p>
-            </div>
+
+          {/* Item Copy Generator - works without listing */}
+          {itemData.ai_status === 'complete' && (
+            <ItemCopyGenerator itemId={itemData.id} />
           )}
         </div>
       </section>
