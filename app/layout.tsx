@@ -1,6 +1,7 @@
 import './globals.css';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { ProfileDropdown } from '@/components/ProfileDropdown';
 
 export const metadata = {
   title: 'VintageLab',
@@ -19,14 +20,23 @@ export default function RootLayout({
           <header className="border-b bg-white">
             <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
               <div className="font-semibold text-sm">VintageLab</div>
-              <nav className="flex gap-4 text-xs">
-                <Link href="/items" className="hover:underline">
-                  Inventory
-                </Link>
-                <Link href="/reporting" className="hover:underline">
-                  Reporting
-                </Link>
-              </nav>
+              <div className="flex items-center gap-6">
+                <nav className="flex gap-4 text-xs">
+                  <Link href="/items" className="hover:underline">
+                    Add Items
+                  </Link>
+                  <Link href="/inventory" className="hover:underline">
+                    Inventory
+                  </Link>
+                  <Link href="/inventory/metadata" className="hover:underline">
+                    Metadata
+                  </Link>
+                  <Link href="/reporting" className="hover:underline">
+                    Reporting
+                  </Link>
+                </nav>
+                <ProfileDropdown />
+              </div>
             </div>
           </header>
           <main className="flex-1 max-w-5xl mx-auto px-4 py-6">
