@@ -192,26 +192,33 @@ Rules:
 `.trim();
 
   try {
-    // Use Chat Completions API (standard OpenAI API format)
+    // Use Chat Completions API with proper system/user message separation
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
         {
           role: 'user',
           content: [
             {
               type: 'text',
-              text: systemPrompt,
+              text: 'Please analyze this vintage/collectible item and provide a detailed identification and valuation.',
             },
             {
               type: 'image_url',
               image_url: {
                 url: primaryImageUrl,
+                detail: 'high', // Request high-detail image analysis
               },
             },
           ],
         },
       ],
+      temperature: 0.7, // Balance between creativity and consistency
+      max_tokens: 2000, // Ensure enough tokens for detailed analysis
       response_format: {
         type: 'json_schema',
         json_schema: {
