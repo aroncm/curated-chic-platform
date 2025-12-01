@@ -130,9 +130,10 @@ export async function PATCH(
         platformId = platformData.id;
       } else {
         // Create new platform
+        const slug = body.platform.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
         const { data: newPlatform, error: platformInsertError } = await supabase
           .from('listing_platforms')
-          .insert({ name: body.platform })
+          .insert({ name: body.platform, slug })
           .select('id')
           .single();
 
