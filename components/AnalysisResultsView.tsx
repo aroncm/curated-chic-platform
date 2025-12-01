@@ -458,10 +458,10 @@ export function AnalysisResultsView({
               {saving ? 'Saving...' : 'Save Item'}
             </button>
             <button
-              onClick={() => router.push('/inventory')}
+              onClick={() => router.push(`/items/${itemId}/listing-management`)}
               className="flex-1 bg-emerald-600 text-white px-6 py-4 rounded-lg text-base font-semibold hover:bg-emerald-700 transition-colors"
             >
-              Continue to Inventory Management
+              Continue to Listing Management
             </button>
           </div>
         </div>

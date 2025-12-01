@@ -18,7 +18,7 @@ export default function RootLayout({
       <body className="bg-slate-100 text-slate-900">
         <div className="min-h-screen flex flex-col">
           <header className="border-b bg-white">
-            <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
               <div className="font-semibold text-sm">VintageLab</div>
               <div className="flex items-center gap-6">
                 <nav className="flex gap-4 text-xs">
@@ -39,7 +39,7 @@ export default function RootLayout({
               </div>
             </div>
           </header>
-          <main className="flex-1 max-w-5xl mx-auto px-4 py-6">
+          <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
             {children}
           </main>
         </div>

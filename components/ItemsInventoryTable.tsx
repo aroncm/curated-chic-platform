@@ -102,19 +102,19 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
   return (
     <div className="bg-white rounded shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-fixed">
           <thead className="bg-slate-100 border-b">
             <tr>
-              <th className="text-left px-4 py-3 font-semibold">Image</th>
-              <th className="text-left px-4 py-3 font-semibold">Item Name</th>
-              <th className="text-left px-4 py-3 font-semibold">Status</th>
-              <th className="text-left px-4 py-3 font-semibold">Platform</th>
-              <th className="text-left px-4 py-3 font-semibold">Cost</th>
-              <th className="text-left px-4 py-3 font-semibold">Listing Price</th>
-              <th className="text-left px-4 py-3 font-semibold">Date Listed</th>
-              <th className="text-left px-4 py-3 font-semibold">Sales Price</th>
-              <th className="text-left px-4 py-3 font-semibold">Date Sold</th>
-              <th className="text-left px-4 py-3 font-semibold">Actions</th>
+              <th className="text-left px-4 py-3 font-semibold w-20">Image</th>
+              <th className="text-left px-4 py-3 font-semibold w-48">Item Name</th>
+              <th className="text-left px-4 py-3 font-semibold w-28">Status</th>
+              <th className="text-left px-4 py-3 font-semibold w-36">Platform</th>
+              <th className="text-left px-4 py-3 font-semibold w-24">Cost</th>
+              <th className="text-left px-4 py-3 font-semibold w-28">Listing Price</th>
+              <th className="text-left px-4 py-3 font-semibold w-32">Date Listed</th>
+              <th className="text-left px-4 py-3 font-semibold w-28">Sales Price</th>
+              <th className="text-left px-4 py-3 font-semibold w-32">Date Sold</th>
+              <th className="text-left px-4 py-3 font-semibold w-24">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -155,7 +155,8 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
                     <td className="px-4 py-3">
                       <Link
                         href={`/items/${item.id}`}
-                        className="text-emerald-600 hover:text-emerald-700 hover:underline font-medium"
+                        className="text-emerald-600 hover:text-emerald-700 hover:underline font-medium block truncate"
+                        title={item.title}
                       >
                         {item.title}
                       </Link>
@@ -203,10 +204,10 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
                             })
                           }
                           placeholder="e.g., eBay"
-                          className="w-full px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          className="w-28 px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         />
                       ) : (
-                        <span className="text-slate-700">
+                        <span className="text-slate-700 block truncate" title={item.platform || ''}>
                           {item.platform || '—'}
                         </span>
                       )}
