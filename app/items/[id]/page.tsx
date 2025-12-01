@@ -2,13 +2,6 @@ import Image from 'next/image';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import { AiStatusBanner } from '@/components/AiStatusBanner';
 import { AnalysisResultsView } from '@/components/AnalysisResultsView';
-import { ItemCopyGenerator } from '@/components/ItemCopyGenerator';
-import { SalesEditor } from '@/components/SalesEditor';
-import { ListingMetaEditor } from '@/components/ListingMetaEditor';
-import { CategorySelector } from '@/components/CategorySelector';
-import { ConditionSelector } from '@/components/ConditionSelector';
-import { LocationSelector } from '@/components/LocationSelector';
-import { TagSelector } from '@/components/TagSelector';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,17 +58,8 @@ export default async function ItemDetailPage({
 
   const itemData = item as any;
 
-  const { data: itemTags } = await supabase
-  .from('item_tags')
-  .select('tag_id')
-  .eq('item_id', itemData.id);
-
-  const initialTagIds: string[] = itemTags?.map((t: any) => t.tag_id) ?? [];
-
   const images = (itemData as any).item_images || [];
   const purchase = (itemData as any).purchases?.[0];
-  const listing = (itemData as any).listings?.[0];
-  const sale = (itemData as any).sales?.[0];
 
   const costBasis =
     purchase?.purchase_price != null
@@ -106,7 +90,8 @@ export default async function ItemDetailPage({
         )}
       </div>
 
-      {images.length > 0 && (
+      {/* Show images if AI analysis hasn't been done yet */}
+      {itemData.ai_status !== 'complete' && images.length > 0 && (
         <div className="flex gap-4 overflow-x-auto">
           {images.map((img: any) => (
             <div key={img.id} className="relative w-40 h-40 flex-shrink-0">
@@ -121,7 +106,7 @@ export default async function ItemDetailPage({
         </div>
       )}
 
-      {/* AI Analysis Results (if complete) */}
+      {/* AI Analysis Results (if complete) - now includes images */}
       {itemData.ai_status === 'complete' && (
         <AnalysisResultsView
           itemId={itemData.id}
@@ -134,117 +119,16 @@ export default async function ItemDetailPage({
             color: itemData.color,
             dimensions_guess: itemData.dimensions_guess,
             condition_summary: itemData.condition_summary,
+            condition_grade: itemData.condition_grade,
             estimated_low_price: itemData.estimated_low_price,
             estimated_high_price: itemData.estimated_high_price,
             suggested_list_price: itemData.suggested_list_price,
             reasoning: itemData.reasoning,
           }}
           costBasis={costBasis}
+          images={images}
         />
       )}
-
-      <section className="grid md:grid-cols-2 gap-6">
-        {/* Left panel: identification, condition, location, tags */}
-        <div className="bg-white p-4 rounded shadow-sm space-y-4 text-sm">
-          <div>
-            <h3 className="font-semibold mb-2">Identification & valuation</h3>
-            <p>
-              <span className="font-medium">AI category (free-text):</span>{' '}
-              {itemData.category || '—'}
-            </p>
-            <CategorySelector
-              itemId={itemData.id}
-              initialCategoryId={itemData.category_id}
-              aiCategory={itemData.category}
-            />
-            <p className="mt-2">
-              <span className="font-medium">Brand/maker:</span>{' '}
-              {itemData.brand_or_maker || '—'}
-            </p>
-            <p>
-              <span className="font-medium">Style/era:</span>{' '}
-              {itemData.style_or_era || '—'}
-            </p>
-            <p>
-              <span className="font-medium">Material:</span>{' '}
-              {itemData.material || '—'}
-            </p>
-            <p>
-              <span className="font-medium">Color:</span>{' '}
-              {itemData.color || '—'}
-            </p>
-            <p>
-              <span className="font-medium">Dimensions (approx):</span>{' '}
-              {itemData.dimensions_guess || '—'}
-            </p>
-            <p className="mt-2">
-              <span className="font-medium">Price range:</span>{' '}
-              {itemData.estimated_low_price && itemData.estimated_high_price
-                ? `$${Number(itemData.estimated_low_price).toFixed(
-                    0
-                  )} – $${Number(itemData.estimated_high_price).toFixed(0)}`
-                : '—'}
-            </p>
-            <p>
-              <span className="font-medium">Suggested list price:</span>{' '}
-              {itemData.suggested_list_price
-                ? `$${Number(itemData.suggested_list_price).toFixed(0)}`
-                : '—'}
-            </p>
-            {purchase && (
-              <p>
-                <span className="font-medium">Purchase:</span>{' '}
-                {purchase.source || 'unknown'} –{' '}
-                {purchase.purchase_price
-                  ? `$${Number(purchase.purchase_price).toFixed(2)}`
-                  : 'price unknown'}
-              </p>
-            )}
-          </div>
-
-          <div className="border-t pt-3">
-            <h4 className="text-xs font-semibold mb-2">
-              Condition & location
-            </h4>
-            <ConditionSelector
-              itemId={itemData.id}
-              initialGrade={itemData.condition_grade}
-              initialIsRestored={itemData.is_restored}
-              initialSummary={itemData.condition_summary}
-            />
-            <div className="mt-3">
-              <LocationSelector
-                itemId={itemData.id}
-                initialLocationId={itemData.location_id}
-              />
-            </div>
-          </div>
-
-          <div className="border-t pt-3">
-            <TagSelector itemId={itemData.id} initialTagIds={initialTagIds} />
-          </div>
-        </div>
-
-        {/* Right panel: listing meta & copy */}
-        <div className="space-y-4">
-          <ListingMetaEditor itemId={itemData.id} initialListing={listing} />
-
-          {/* Item Copy Generator - works without listing */}
-          {itemData.ai_status === 'complete' && (
-            <ItemCopyGenerator itemId={itemData.id} />
-          )}
-        </div>
-      </section>
-
-      {/* Sales & profit editor */}
-      <section>
-        <SalesEditor
-          itemId={itemData.id}
-          listingId={listing?.id}
-          initialSale={sale}
-          costBasis={costBasis}
-        />
-      </section>
     </main>
   );
 }
