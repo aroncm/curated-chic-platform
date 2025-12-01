@@ -18,16 +18,20 @@ export async function PATCH(
     const body = await request.json();
     const { id } = await params;
 
+    // Build update object with only provided fields
+    const updateData: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (body.title !== undefined) updateData.title = body.title;
+    if (body.status !== undefined) updateData.status = body.status;
+    if (body.category !== undefined) updateData.category = body.category;
+    if (body.condition_summary !== undefined) updateData.condition_summary = body.condition_summary;
+
     // Update the item
     const { data, error } = await supabase
       .from('items')
-      .update({
-        title: body.title,
-        status: body.status,
-        category: body.category,
-        condition_summary: body.condition_summary,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', id)
       .eq('owner_id', user.id)
       .select()
