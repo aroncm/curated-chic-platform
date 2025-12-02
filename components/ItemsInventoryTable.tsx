@@ -11,6 +11,7 @@ type ItemInventoryRow = {
   status: 'new' | 'identified' | 'listed' | 'sold';
   platform: string | null;
   cost: number | null;
+  suggested_price: number | null;
   listing_price: number | null;
   sales_price: number | null;
   date_listed: string | null;
@@ -111,6 +112,7 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
               <th className="text-left px-4 py-3 font-semibold w-36">Platform</th>
               <th className="text-left px-4 py-3 font-semibold w-24">Cost</th>
               <th className="text-left px-4 py-3 font-semibold w-28">Suggested Price</th>
+              <th className="text-left px-4 py-3 font-semibold w-28">Listing Price</th>
               <th className="text-left px-4 py-3 font-semibold w-32">Date Listed</th>
               <th className="text-left px-4 py-3 font-semibold w-28">Sales Price</th>
               <th className="text-left px-4 py-3 font-semibold w-32">Date Sold</th>
@@ -121,7 +123,7 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
             {items.length === 0 ? (
               <tr>
                 <td
-                  colSpan={10}
+                  colSpan={11}
                   className="px-4 py-8 text-center text-slate-500 text-sm"
                 >
                   No items in inventory yet. Add items to get started.
@@ -239,7 +241,14 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
                       )}
                     </td>
 
-                    {/* Listing Price */}
+                    {/* Suggested Price (AI recommendation, read-only) */}
+                    <td className="px-4 py-3">
+                      <span className="text-slate-700">
+                        {item.suggested_price != null ? `$${Number(item.suggested_price).toFixed(2)}` : '—'}
+                      </span>
+                    </td>
+
+                    {/* Listing Price (actual price when listed, editable) */}
                     <td className="px-4 py-3">
                       {isEditing ? (
                         <div className="relative">
