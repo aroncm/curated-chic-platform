@@ -43,41 +43,54 @@ export async function PATCH(
     // Update related data if provided
     if (body.cost !== undefined) {
       const costValue = Number(body.cost);
-      if (!isNaN(costValue) && costValue > 0) {
-        // Check if purchase record exists
-        const { data: existingPurchase } = await supabase
-          .from('purchases')
-          .select('id')
-          .eq('item_id', id)
-          .maybeSingle();
-
-        if (existingPurchase) {
-          // Update existing purchase
+      if (!isNaN(costValue)) {
+        if (costValue === 0) {
+          // Delete the purchase record when cost is set to 0
           const { error: purchaseError } = await supabase
             .from('purchases')
-            .update({
-              purchase_price: costValue,
-              additional_costs: 0,
-            })
+            .delete()
             .eq('item_id', id);
 
           if (purchaseError) {
-            console.error('Error updating purchase:', purchaseError);
-            return NextResponse.json({ error: 'Failed to update cost' }, { status: 500 });
+            console.error('Error deleting purchase:', purchaseError);
+            return NextResponse.json({ error: 'Failed to clear cost' }, { status: 500 });
           }
-        } else {
-          // Insert new purchase
-          const { error: purchaseError } = await supabase
+        } else if (costValue > 0) {
+          // Check if purchase record exists
+          const { data: existingPurchase } = await supabase
             .from('purchases')
-            .insert({
-              item_id: id,
-              purchase_price: costValue,
-              additional_costs: 0,
-            });
+            .select('id')
+            .eq('item_id', id)
+            .maybeSingle();
 
-          if (purchaseError) {
-            console.error('Error creating purchase:', purchaseError);
-            return NextResponse.json({ error: 'Failed to save cost' }, { status: 500 });
+          if (existingPurchase) {
+            // Update existing purchase
+            const { error: purchaseError } = await supabase
+              .from('purchases')
+              .update({
+                purchase_price: costValue,
+                additional_costs: 0,
+              })
+              .eq('item_id', id);
+
+            if (purchaseError) {
+              console.error('Error updating purchase:', purchaseError);
+              return NextResponse.json({ error: 'Failed to update cost' }, { status: 500 });
+            }
+          } else {
+            // Insert new purchase
+            const { error: purchaseError } = await supabase
+              .from('purchases')
+              .insert({
+                item_id: id,
+                purchase_price: costValue,
+                additional_costs: 0,
+              });
+
+            if (purchaseError) {
+              console.error('Error creating purchase:', purchaseError);
+              return NextResponse.json({ error: 'Failed to save cost' }, { status: 500 });
+            }
           }
         }
       }
@@ -88,8 +101,13 @@ export async function PATCH(
 
       if (body.listing_price !== undefined) {
         const listingValue = Number(body.listing_price);
-        if (!isNaN(listingValue) && listingValue > 0) {
-          listingData.listing_price = listingValue;
+        if (!isNaN(listingValue)) {
+          if (listingValue === 0) {
+            // Set to null to clear the listing price
+            listingData.listing_price = null;
+          } else if (listingValue > 0) {
+            listingData.listing_price = listingValue;
+          }
         }
       }
 
@@ -117,14 +135,16 @@ export async function PATCH(
             return NextResponse.json({ error: 'Failed to update listing' }, { status: 500 });
           }
         } else {
-          // Insert new listing
-          const { error: listingError } = await supabase
-            .from('listings')
-            .insert(listingData);
+          // Only insert if listing_price is > 0 (don't create record for null/0)
+          if (listingData.listing_price && listingData.listing_price > 0) {
+            const { error: listingError } = await supabase
+              .from('listings')
+              .insert(listingData);
 
-          if (listingError) {
-            console.error('Error creating listing:', listingError);
-            return NextResponse.json({ error: 'Failed to save listing' }, { status: 500 });
+            if (listingError) {
+              console.error('Error creating listing:', listingError);
+              return NextResponse.json({ error: 'Failed to save listing' }, { status: 500 });
+            }
           }
         }
       }
@@ -135,8 +155,13 @@ export async function PATCH(
 
       if (body.sales_price !== undefined) {
         const salesValue = Number(body.sales_price);
-        if (!isNaN(salesValue) && salesValue > 0) {
-          salesData.sale_price = salesValue;
+        if (!isNaN(salesValue)) {
+          if (salesValue === 0) {
+            // Set to null to clear the sales price
+            salesData.sale_price = null;
+          } else if (salesValue > 0) {
+            salesData.sale_price = salesValue;
+          }
         }
       }
 
@@ -164,14 +189,16 @@ export async function PATCH(
             return NextResponse.json({ error: 'Failed to update sale' }, { status: 500 });
           }
         } else {
-          // Insert new sale
-          const { error: saleError } = await supabase
-            .from('sales')
-            .insert(salesData);
+          // Only insert if sale_price is > 0 (don't create record for null/0)
+          if (salesData.sale_price && salesData.sale_price > 0) {
+            const { error: saleError } = await supabase
+              .from('sales')
+              .insert(salesData);
 
-          if (saleError) {
-            console.error('Error creating sale:', saleError);
-            return NextResponse.json({ error: 'Failed to save sale' }, { status: 500 });
+            if (saleError) {
+              console.error('Error creating sale:', saleError);
+              return NextResponse.json({ error: 'Failed to save sale' }, { status: 500 });
+            }
           }
         }
       }
