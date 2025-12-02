@@ -110,7 +110,7 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
               <th className="text-left px-4 py-3 font-semibold w-28">Status</th>
               <th className="text-left px-4 py-3 font-semibold w-36">Platform</th>
               <th className="text-left px-4 py-3 font-semibold w-24">Cost</th>
-              <th className="text-left px-4 py-3 font-semibold w-28">Listing Price</th>
+              <th className="text-left px-4 py-3 font-semibold w-28">Suggested Price</th>
               <th className="text-left px-4 py-3 font-semibold w-32">Date Listed</th>
               <th className="text-left px-4 py-3 font-semibold w-28">Sales Price</th>
               <th className="text-left px-4 py-3 font-semibold w-32">Date Sold</th>
