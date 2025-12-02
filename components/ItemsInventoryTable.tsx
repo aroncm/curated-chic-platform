@@ -189,8 +189,8 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
                         }
                         className="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       >
-                        <option value="new">Unlisted</option>
-                        <option value="identified">Unlisted</option>
+                        <option value="new">New</option>
+                        <option value="identified">Identified</option>
                         <option value="listed">Listed</option>
                         <option value="sold">Sold</option>
                       </select>
