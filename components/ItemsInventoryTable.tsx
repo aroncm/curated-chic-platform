@@ -30,6 +30,21 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
 
+  // Helper function to format currency for display
+  const formatCurrency = (value: number | null | undefined): string => {
+    if (value == null || value === 0) return '';
+    return value.toString();
+  };
+
+  // Helper function to parse currency input
+  const parseCurrency = (value: string): number | null => {
+    if (!value || value.trim() === '') return null;
+    // Remove any non-numeric characters except decimal point
+    const cleaned = value.replace(/[^\d.]/g, '');
+    const parsed = parseFloat(cleaned);
+    return isNaN(parsed) || parsed === 0 ? null : parsed;
+  };
+
   const handleEdit = (item: ItemInventoryRow) => {
     setEditingId(item.id);
     setEditValues({
@@ -270,13 +285,13 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
                         <div className="relative">
                           <span className="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
                           <input
-                            type="number"
-                            step="0.01"
-                            value={editValues.cost ?? item.cost ?? ''}
+                            type="text"
+                            inputMode="decimal"
+                            value={formatCurrency(editValues.cost ?? item.cost)}
                             onChange={(e) =>
                               setEditValues({
                                 ...editValues,
-                                cost: e.target.value ? Number(e.target.value) : null,
+                                cost: parseCurrency(e.target.value),
                               })
                             }
                             placeholder="0.00"
@@ -293,15 +308,13 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
                         <div className="relative">
                           <span className="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
                           <input
-                            type="number"
-                            step="0.01"
-                            value={editValues.listing_price ?? item.listing_price ?? ''}
+                            type="text"
+                            inputMode="decimal"
+                            value={formatCurrency(editValues.listing_price ?? item.listing_price)}
                             onChange={(e) =>
                               setEditValues({
                                 ...editValues,
-                                listing_price: e.target.value
-                                  ? Number(e.target.value)
-                                  : null,
+                                listing_price: parseCurrency(e.target.value),
                               })
                             }
                             placeholder="0.00"
@@ -336,15 +349,13 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
                         <div className="relative">
                           <span className="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
                           <input
-                            type="number"
-                            step="0.01"
-                            value={editValues.sales_price ?? item.sales_price ?? ''}
+                            type="text"
+                            inputMode="decimal"
+                            value={formatCurrency(editValues.sales_price ?? item.sales_price)}
                             onChange={(e) =>
                               setEditValues({
                                 ...editValues,
-                                sales_price: e.target.value
-                                  ? Number(e.target.value)
-                                  : null,
+                                sales_price: parseCurrency(e.target.value),
                               })
                             }
                             placeholder="0.00"
