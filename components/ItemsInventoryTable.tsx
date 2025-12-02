@@ -17,6 +17,10 @@ type ItemInventoryRow = {
   date_listed: string | null;
   date_sold: string | null;
   thumbnail_url: string | null;
+  shipping_cost: number | null;
+  platform_fees: number | null;
+  other_fees: number | null;
+  total_fees: number | null;
 };
 
 type ItemsInventoryTableProps = {
@@ -55,6 +59,9 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
       sales_price: item.sales_price,
       date_listed: item.date_listed,
       date_sold: item.date_sold,
+      shipping_cost: item.shipping_cost,
+      platform_fees: item.platform_fees,
+      other_fees: item.other_fees,
     });
   };
 
@@ -255,188 +262,155 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
                     </div>
                   </div>
 
-                  {/* Single Row of Fields */}
-                  {isEditing ? (
-                    <div className="grid grid-cols-7 gap-3 text-xs">
-                      {/* Platform */}
-                      <div>
-                        <label className="block text-[10px] font-medium text-slate-500 mb-1">
-                          Platform
-                        </label>
+                  {/* Single Row of Fields - Always Editable */}
+                  <div className="grid grid-cols-7 gap-3 text-xs">
+                    {/* Platform */}
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">
+                        Platform
+                      </label>
+                      <input
+                        type="text"
+                        value={isEditing ? (editValues.platform ?? item.platform ?? '') : (item.platform ?? '')}
+                        onChange={(e) =>
+                          setEditValues({
+                            ...editValues,
+                            platform: e.target.value || null,
+                          })
+                        }
+                        placeholder="eBay"
+                        disabled={!isEditing}
+                        className="w-full px-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-700"
+                      />
+                    </div>
+
+                    {/* Cost */}
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">
+                        Cost
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
                         <input
                           type="text"
-                          value={editValues.platform ?? item.platform ?? ''}
+                          inputMode="decimal"
+                          value={formatCurrency(isEditing ? (editValues.cost ?? item.cost) : item.cost)}
                           onChange={(e) =>
                             setEditValues({
                               ...editValues,
-                              platform: e.target.value || null,
+                              cost: parseCurrency(e.target.value),
                             })
                           }
-                          placeholder="eBay"
-                          className="w-full px-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                        />
-                      </div>
-
-                      {/* Cost */}
-                      <div>
-                        <label className="block text-[10px] font-medium text-slate-500 mb-1">
-                          Cost
-                        </label>
-                        <div className="relative">
-                          <span className="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            value={formatCurrency(editValues.cost ?? item.cost)}
-                            onChange={(e) =>
-                              setEditValues({
-                                ...editValues,
-                                cost: parseCurrency(e.target.value),
-                              })
-                            }
-                            placeholder="0.00"
-                            className="w-full pl-5 pr-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Listing Price */}
-                      <div>
-                        <label className="block text-[10px] font-medium text-slate-500 mb-1">
-                          List Price
-                        </label>
-                        <div className="relative">
-                          <span className="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            value={formatCurrency(editValues.listing_price ?? item.listing_price)}
-                            onChange={(e) =>
-                              setEditValues({
-                                ...editValues,
-                                listing_price: parseCurrency(e.target.value),
-                              })
-                            }
-                            placeholder="0.00"
-                            className="w-full pl-5 pr-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Date Listed */}
-                      <div>
-                        <label className="block text-[10px] font-medium text-slate-500 mb-1">
-                          Date Listed
-                        </label>
-                        <input
-                          type="date"
-                          value={editValues.date_listed ?? item.date_listed ?? ''}
-                          onChange={(e) =>
-                            setEditValues({
-                              ...editValues,
-                              date_listed: e.target.value || null,
-                            })
-                          }
-                          className="w-full px-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                        />
-                      </div>
-
-                      {/* Sales Price */}
-                      <div>
-                        <label className="block text-[10px] font-medium text-slate-500 mb-1">
-                          Sale Price
-                        </label>
-                        <div className="relative">
-                          <span className="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            value={formatCurrency(editValues.sales_price ?? item.sales_price)}
-                            onChange={(e) =>
-                              setEditValues({
-                                ...editValues,
-                                sales_price: parseCurrency(e.target.value),
-                              })
-                            }
-                            placeholder="0.00"
-                            className="w-full pl-5 pr-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Date Sold */}
-                      <div>
-                        <label className="block text-[10px] font-medium text-slate-500 mb-1">
-                          Date Sold
-                        </label>
-                        <input
-                          type="date"
-                          value={editValues.date_sold ?? item.date_sold ?? ''}
-                          onChange={(e) =>
-                            setEditValues({
-                              ...editValues,
-                              date_sold: e.target.value || null,
-                            })
-                          }
-                          className="w-full px-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                          placeholder="0.00"
+                          disabled={!isEditing}
+                          className="w-full pl-5 pr-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-700"
                         />
                       </div>
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-6 text-xs">
-                      {/* Cost */}
-                      <div>
-                        <div className="text-[10px] text-slate-500 mb-0.5">Cost</div>
-                        <div className="text-slate-900 font-semibold">
-                          {item.cost != null ? `$${Number(item.cost).toFixed(2)}` : '—'}
-                        </div>
-                      </div>
 
-                      {/* Suggested Price */}
-                      <div>
-                        <div className="text-[10px] text-slate-500 mb-0.5">Suggested</div>
-                        <div className="text-slate-900 font-semibold">
-                          {item.suggested_price != null ? `$${Number(item.suggested_price).toFixed(2)}` : '—'}
-                        </div>
-                      </div>
-
-                      {/* Listing Price */}
-                      <div>
-                        <div className="text-[10px] text-slate-500 mb-0.5">List Price</div>
-                        <div className="text-slate-900 font-semibold">
-                          {item.listing_price != null
-                            ? `$${Number(item.listing_price).toFixed(2)}`
-                            : '—'}
-                        </div>
-                      </div>
-
-                      {/* Date Listed */}
-                      <div>
-                        <div className="text-[10px] text-slate-500 mb-0.5">Date Listed</div>
-                        <div className="text-slate-900">
-                          {item.date_listed || '—'}
-                        </div>
-                      </div>
-
-                      {/* Sales Price */}
-                      <div>
-                        <div className="text-[10px] text-slate-500 mb-0.5">Sale Price</div>
-                        <div className="text-slate-900 font-semibold">
-                          {item.sales_price != null
-                            ? `$${Number(item.sales_price).toFixed(2)}`
-                            : '—'}
-                        </div>
-                      </div>
-
-                      {/* Date Sold */}
-                      <div>
-                        <div className="text-[10px] text-slate-500 mb-0.5">Date Sold</div>
-                        <div className="text-slate-900">
-                          {item.date_sold || '—'}
-                        </div>
+                    {/* Listing Price */}
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">
+                        List Price
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={formatCurrency(isEditing ? (editValues.listing_price ?? item.listing_price) : item.listing_price)}
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              listing_price: parseCurrency(e.target.value),
+                            })
+                          }
+                          placeholder="0.00"
+                          disabled={!isEditing}
+                          className="w-full pl-5 pr-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-700"
+                        />
                       </div>
                     </div>
-                  )}
+
+                    {/* Date Listed */}
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">
+                        Date Listed
+                      </label>
+                      <input
+                        type="date"
+                        value={isEditing ? (editValues.date_listed ?? item.date_listed ?? '') : (item.date_listed ?? '')}
+                        onChange={(e) =>
+                          setEditValues({
+                            ...editValues,
+                            date_listed: e.target.value || null,
+                          })
+                        }
+                        disabled={!isEditing}
+                        className="w-full px-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-700"
+                      />
+                    </div>
+
+                    {/* Sales Price */}
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">
+                        Sale Price
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={formatCurrency(isEditing ? (editValues.sales_price ?? item.sales_price) : item.sales_price)}
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              sales_price: parseCurrency(e.target.value),
+                            })
+                          }
+                          placeholder="0.00"
+                          disabled={!isEditing}
+                          className="w-full pl-5 pr-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-700"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Date Sold */}
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">
+                        Date Sold
+                      </label>
+                      <input
+                        type="date"
+                        value={isEditing ? (editValues.date_sold ?? item.date_sold ?? '') : (item.date_sold ?? '')}
+                        onChange={(e) =>
+                          setEditValues({
+                            ...editValues,
+                            date_sold: e.target.value || null,
+                          })
+                        }
+                        disabled={!isEditing}
+                        className="w-full px-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-700"
+                      />
+                    </div>
+
+                    {/* Fees (Shipping + Platform + Other) */}
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">
+                        Fees
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
+                        <input
+                          type="text"
+                          value={formatCurrency(item.total_fees)}
+                          disabled
+                          className="w-full pl-5 pr-2 py-1.5 border border-slate-300 rounded text-xs bg-slate-50 text-slate-700"
+                          title="Total of shipping, platform, and other fees"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

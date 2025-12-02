@@ -32,7 +32,7 @@ export default async function InventoryPage() {
       item_images(url),
       purchases(purchase_price, additional_costs),
       listings(listing_price, date_listed, listing_platforms(name)),
-      sales(sale_price, sale_date)
+      sales(sale_price, sale_date, shipping_cost, platform_fees, other_fees)
     `
     )
     .eq('owner_id', user.id)
@@ -59,6 +59,13 @@ export default async function InventoryPage() {
         (purchase.additional_costs ? Number(purchase.additional_costs) : 0)
       : null;
 
+    // Calculate total fees (shipping + platform + other)
+    const totalFees = sale
+      ? (sale.shipping_cost ? Number(sale.shipping_cost) : 0) +
+        (sale.platform_fees ? Number(sale.platform_fees) : 0) +
+        (sale.other_fees ? Number(sale.other_fees) : 0)
+      : null;
+
     return {
       id: item.id,
       title: item.title,
@@ -71,6 +78,10 @@ export default async function InventoryPage() {
       date_listed: listing?.date_listed || null,
       date_sold: sale?.sale_date || null,
       thumbnail_url: item.item_images?.[0]?.url || null,
+      shipping_cost: sale?.shipping_cost ? Number(sale.shipping_cost) : null,
+      platform_fees: sale?.platform_fees ? Number(sale.platform_fees) : null,
+      other_fees: sale?.other_fees ? Number(sale.other_fees) : null,
+      total_fees: totalFees,
     };
   });
 
