@@ -50,7 +50,6 @@ export function AnalysisResultsView({
   const [condition, setCondition] = useState(analysis.condition_summary);
   const [inventoryLocation, setInventoryLocation] = useState('');
   const [cost, setCost] = useState(costBasis?.toString() || '');
-  const [listingPrice, setListingPrice] = useState(analysis.suggested_list_price.toString());
   const [salesPrice, setSalesPrice] = useState('');
   const [salesFees, setSalesFees] = useState('');
   const [saving, setSaving] = useState(false);
@@ -133,7 +132,6 @@ export function AnalysisResultsView({
         category: category.trim(),
         condition_summary: condition.trim(),
         cost: cost ? Number(cost) : null,
-        listing_price: listingPrice ? Number(listingPrice) : null,
         sales_price: salesPrice ? Number(salesPrice) : null,
       };
 
@@ -391,31 +389,28 @@ export function AnalysisResultsView({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Cost
               </label>
-              <input
-                type="number"
-                step="0.01"
-                value={cost}
-                onChange={(e) => setCost(e.target.value)}
-                placeholder="0.00"
-                className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-slate-500">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={cost}
+                  onChange={(e) => setCost(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full pl-6 pr-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
             </div>
 
-            {/* Listing Price */}
+            {/* Suggested Listing Price */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Listing Price
+                Suggested Listing Price
               </label>
-              <input
-                type="number"
-                step="0.01"
-                value={listingPrice}
-                onChange={(e) => setListingPrice(e.target.value)}
-                placeholder="0.00"
-                className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
-                disabled
-              />
-              <p className="text-xs text-slate-500 mt-1">Will be set when listing</p>
+              <div className="w-full px-3 py-2 border border-slate-300 rounded text-sm bg-slate-50 text-slate-700">
+                ${analysis.suggested_list_price.toFixed(2)}
+              </div>
+              <p className="text-xs text-slate-500 mt-1">From AI analysis</p>
             </div>
 
             {/* Sales Price */}
@@ -423,15 +418,18 @@ export function AnalysisResultsView({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Sales Price
               </label>
-              <input
-                type="number"
-                step="0.01"
-                value={salesPrice}
-                onChange={(e) => setSalesPrice(e.target.value)}
-                placeholder="0.00"
-                className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
-                disabled
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-slate-400">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={salesPrice}
+                  onChange={(e) => setSalesPrice(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full pl-6 pr-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
+                  disabled
+                />
+              </div>
               <p className="text-xs text-slate-500 mt-1">Will be set when sold</p>
             </div>
 
@@ -440,15 +438,18 @@ export function AnalysisResultsView({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Sales Fees
               </label>
-              <input
-                type="number"
-                step="0.01"
-                value={salesFees}
-                onChange={(e) => setSalesFees(e.target.value)}
-                placeholder="0.00"
-                className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
-                disabled
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-slate-400">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={salesFees}
+                  onChange={(e) => setSalesFees(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full pl-6 pr-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
+                  disabled
+                />
+              </div>
               <p className="text-xs text-slate-500 mt-1">Will be calculated when sold</p>
             </div>
           </div>

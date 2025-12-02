@@ -216,19 +216,22 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
                     {/* Cost */}
                     <td className="px-4 py-3">
                       {isEditing ? (
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={editValues.cost ?? item.cost ?? ''}
-                          onChange={(e) =>
-                            setEditValues({
-                              ...editValues,
-                              cost: e.target.value ? Number(e.target.value) : null,
-                            })
-                          }
-                          placeholder="0.00"
-                          className="w-24 px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        />
+                        <div className="relative">
+                          <span className="absolute left-2 top-1 text-slate-500 text-sm">$</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={editValues.cost ?? item.cost ?? ''}
+                            onChange={(e) =>
+                              setEditValues({
+                                ...editValues,
+                                cost: e.target.value ? Number(e.target.value) : null,
+                              })
+                            }
+                            placeholder="0.00"
+                            className="w-24 pl-5 pr-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                        </div>
                       ) : (
                         <span className="text-slate-700">
                           {item.cost != null ? `$${Number(item.cost).toFixed(2)}` : '—'}
@@ -239,23 +242,26 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
                     {/* Listing Price */}
                     <td className="px-4 py-3">
                       {isEditing ? (
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={
-                            editValues.listing_price ?? item.listing_price ?? ''
-                          }
-                          onChange={(e) =>
-                            setEditValues({
-                              ...editValues,
-                              listing_price: e.target.value
-                                ? Number(e.target.value)
-                                : null,
-                            })
-                          }
-                          placeholder="0.00"
-                          className="w-24 px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        />
+                        <div className="relative">
+                          <span className="absolute left-2 top-1 text-slate-500 text-sm">$</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={
+                              editValues.listing_price ?? item.listing_price ?? ''
+                            }
+                            onChange={(e) =>
+                              setEditValues({
+                                ...editValues,
+                                listing_price: e.target.value
+                                  ? Number(e.target.value)
+                                  : null,
+                              })
+                            }
+                            placeholder="0.00"
+                            className="w-24 pl-5 pr-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                        </div>
                       ) : (
                         <span className="text-slate-700">
                           {item.listing_price != null
@@ -289,21 +295,24 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
                     {/* Sales Price */}
                     <td className="px-4 py-3">
                       {isEditing ? (
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={editValues.sales_price ?? item.sales_price ?? ''}
-                          onChange={(e) =>
-                            setEditValues({
-                              ...editValues,
-                              sales_price: e.target.value
-                                ? Number(e.target.value)
-                                : null,
-                            })
-                          }
-                          placeholder="0.00"
-                          className="w-24 px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        />
+                        <div className="relative">
+                          <span className="absolute left-2 top-1 text-slate-500 text-sm">$</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={editValues.sales_price ?? item.sales_price ?? ''}
+                            onChange={(e) =>
+                              setEditValues({
+                                ...editValues,
+                                sales_price: e.target.value
+                                  ? Number(e.target.value)
+                                  : null,
+                              })
+                            }
+                            placeholder="0.00"
+                            className="w-24 pl-5 pr-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                        </div>
                       ) : (
                         <span className="text-slate-700">
                           {item.sales_price != null
