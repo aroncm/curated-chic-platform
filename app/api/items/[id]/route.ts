@@ -19,9 +19,7 @@ export async function PATCH(
     const { id } = await params;
 
     // Build update object with only provided fields
-    const updateData: any = {
-      updated_at: new Date().toISOString(),
-    };
+    const updateData: any = {};
 
     if (body.title !== undefined) updateData.title = body.title;
     if (body.status !== undefined) updateData.status = body.status;
