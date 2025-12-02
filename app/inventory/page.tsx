@@ -76,7 +76,12 @@ export default async function InventoryPage() {
 
   return (
     <main className="space-y-6">
-      <Breadcrumb items={[{ label: 'Inventory' }]} />
+      <Breadcrumb
+        items={[
+          { label: 'Home', href: '/items' },
+          { label: 'Inventory' },
+        ]}
+      />
 
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Inventory Management</h2>

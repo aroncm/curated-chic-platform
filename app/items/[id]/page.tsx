@@ -72,6 +72,7 @@ export default async function ItemDetailPage({
     <main className="space-y-6">
       <Breadcrumb
         items={[
+          { label: 'Home', href: '/items' },
           { label: 'Inventory', href: '/inventory' },
           { label: itemData.title || 'Item Details' },
         ]}

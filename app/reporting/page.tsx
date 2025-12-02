@@ -179,7 +179,12 @@ export default async function ReportingPage({
 
   return (
     <main className="space-y-6">
-      <Breadcrumb items={[{ label: 'Reporting' }]} />
+      <Breadcrumb
+        items={[
+          { label: 'Home', href: '/items' },
+          { label: 'Reporting' },
+        ]}
+      />
 
       <div className="flex items-center justify-between gap-2">
         <div>

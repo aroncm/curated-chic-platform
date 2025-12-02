@@ -56,6 +56,7 @@ export default async function ListingManagementPage({
     <main className="space-y-6">
       <Breadcrumb
         items={[
+          { label: 'Home', href: '/items' },
           { label: 'Inventory', href: '/inventory' },
           { label: itemData.title || 'Item', href: `/items/${itemData.id}` },
           { label: 'Listing Management' },

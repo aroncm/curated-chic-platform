@@ -55,7 +55,12 @@ export default async function ListingsPage() {
 
   return (
     <main className="space-y-6">
-      <Breadcrumb items={[{ label: 'Listing' }]} />
+      <Breadcrumb
+        items={[
+          { label: 'Home', href: '/items' },
+          { label: 'Listing' },
+        ]}
+      />
 
       <div>
         <h2 className="text-xl font-semibold">Listing Management</h2>

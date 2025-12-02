@@ -53,7 +53,7 @@ export default async function ItemsPage() {
 
   return (
     <main className="space-y-6">
-      <Breadcrumb items={[{ label: 'Add Items' }]} />
+      <Breadcrumb items={[{ label: 'Home' }]} />
 
       {/* Add Item Form */}
       <AddItemForm />
