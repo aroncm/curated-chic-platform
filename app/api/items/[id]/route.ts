@@ -40,6 +40,14 @@ export async function PATCH(
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // If status changed to 'new' or 'identified' (unlisted), clear listing_price
+    if (body.status !== undefined && (body.status === 'new' || body.status === 'identified')) {
+      await supabase
+        .from('listings')
+        .update({ listing_price: null })
+        .eq('item_id', id);
+    }
+
     // Update related data if provided
     if (body.cost !== undefined) {
       const costValue = Number(body.cost);
@@ -102,11 +110,28 @@ export async function PATCH(
       if (body.listing_price !== undefined) {
         const listingValue = Number(body.listing_price);
         if (!isNaN(listingValue)) {
+          // Get current status - if status was just updated, use the new value; otherwise fetch current
+          let currentStatus = body.status;
+          if (!currentStatus) {
+            const { data: itemData } = await supabase
+              .from('items')
+              .select('status')
+              .eq('id', id)
+              .single();
+            currentStatus = itemData?.status;
+          }
+
           if (listingValue === 0) {
-            // Set to null to clear the listing price
+            // Always allow clearing (set to null)
             listingData.listing_price = null;
           } else if (listingValue > 0) {
-            listingData.listing_price = listingValue;
+            // Only allow setting a positive listing_price if status is 'listed'
+            if (currentStatus === 'listed') {
+              listingData.listing_price = listingValue;
+            } else {
+              // Silently ignore attempt to set listing_price on unlisted item
+              // (don't add it to listingData)
+            }
           }
         }
       }
