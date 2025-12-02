@@ -44,19 +44,41 @@ export async function PATCH(
     if (body.cost !== undefined) {
       const costValue = Number(body.cost);
       if (!isNaN(costValue) && costValue > 0) {
-        // Update or insert purchase record
-        const { error: purchaseError } = await supabase
+        // Check if purchase record exists
+        const { data: existingPurchase } = await supabase
           .from('purchases')
-          .upsert({
-            item_id: id,
-            purchase_price: costValue,
-            additional_costs: 0,
-          }, {
-            onConflict: 'item_id',
-          });
+          .select('id')
+          .eq('item_id', id)
+          .maybeSingle();
 
-        if (purchaseError) {
-          console.error('Error updating purchase:', purchaseError);
+        if (existingPurchase) {
+          // Update existing purchase
+          const { error: purchaseError } = await supabase
+            .from('purchases')
+            .update({
+              purchase_price: costValue,
+              additional_costs: 0,
+            })
+            .eq('item_id', id);
+
+          if (purchaseError) {
+            console.error('Error updating purchase:', purchaseError);
+            return NextResponse.json({ error: 'Failed to update cost' }, { status: 500 });
+          }
+        } else {
+          // Insert new purchase
+          const { error: purchaseError } = await supabase
+            .from('purchases')
+            .insert({
+              item_id: id,
+              purchase_price: costValue,
+              additional_costs: 0,
+            });
+
+          if (purchaseError) {
+            console.error('Error creating purchase:', purchaseError);
+            return NextResponse.json({ error: 'Failed to save cost' }, { status: 500 });
+          }
         }
       }
     }
@@ -76,15 +98,34 @@ export async function PATCH(
       }
 
       if (Object.keys(listingData).length > 1) {
-        // Update or insert listing record
-        const { error: listingError } = await supabase
+        // Check if listing record exists
+        const { data: existingListing } = await supabase
           .from('listings')
-          .upsert(listingData, {
-            onConflict: 'item_id',
-          });
+          .select('id')
+          .eq('item_id', id)
+          .maybeSingle();
 
-        if (listingError) {
-          console.error('Error updating listing:', listingError);
+        if (existingListing) {
+          // Update existing listing
+          const { error: listingError } = await supabase
+            .from('listings')
+            .update(listingData)
+            .eq('item_id', id);
+
+          if (listingError) {
+            console.error('Error updating listing:', listingError);
+            return NextResponse.json({ error: 'Failed to update listing' }, { status: 500 });
+          }
+        } else {
+          // Insert new listing
+          const { error: listingError } = await supabase
+            .from('listings')
+            .insert(listingData);
+
+          if (listingError) {
+            console.error('Error creating listing:', listingError);
+            return NextResponse.json({ error: 'Failed to save listing' }, { status: 500 });
+          }
         }
       }
     }
@@ -104,15 +145,34 @@ export async function PATCH(
       }
 
       if (Object.keys(salesData).length > 1) {
-        // Update or insert sale record
-        const { error: saleError } = await supabase
+        // Check if sale record exists
+        const { data: existingSale } = await supabase
           .from('sales')
-          .upsert(salesData, {
-            onConflict: 'item_id',
-          });
+          .select('id')
+          .eq('item_id', id)
+          .maybeSingle();
 
-        if (saleError) {
-          console.error('Error updating sale:', saleError);
+        if (existingSale) {
+          // Update existing sale
+          const { error: saleError } = await supabase
+            .from('sales')
+            .update(salesData)
+            .eq('item_id', id);
+
+          if (saleError) {
+            console.error('Error updating sale:', saleError);
+            return NextResponse.json({ error: 'Failed to update sale' }, { status: 500 });
+          }
+        } else {
+          // Insert new sale
+          const { error: saleError } = await supabase
+            .from('sales')
+            .insert(salesData);
+
+          if (saleError) {
+            console.error('Error creating sale:', saleError);
+            return NextResponse.json({ error: 'Failed to save sale' }, { status: 500 });
+          }
         }
       }
     }
