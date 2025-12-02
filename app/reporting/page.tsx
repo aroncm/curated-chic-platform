@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import Link from 'next/link';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 export const dynamic = 'force-dynamic';
 
@@ -178,6 +179,8 @@ export default async function ReportingPage({
 
   return (
     <main className="space-y-6">
+      <Breadcrumb items={[{ label: 'Reporting' }]} />
+
       <div className="flex items-center justify-between gap-2">
         <div>
           <h2 className="text-xl font-semibold">Reporting</h2>

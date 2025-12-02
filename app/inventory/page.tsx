@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import { ItemsInventoryTable } from '@/components/ItemsInventoryTable';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,6 +76,8 @@ export default async function InventoryPage() {
 
   return (
     <main className="space-y-6">
+      <Breadcrumb items={[{ label: 'Inventory' }]} />
+
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Inventory Management</h2>
       </div>

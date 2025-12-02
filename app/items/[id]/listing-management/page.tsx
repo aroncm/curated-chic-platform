@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import { ListingCopyManager } from '@/components/ListingCopyManager';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,6 +54,14 @@ export default async function ListingManagementPage({
 
   return (
     <main className="space-y-6">
+      <Breadcrumb
+        items={[
+          { label: 'Inventory', href: '/inventory' },
+          { label: itemData.title || 'Item', href: `/items/${itemData.id}` },
+          { label: 'Listing Management' },
+        ]}
+      />
+
       {/* Header with item info */}
       <div className="bg-white p-6 rounded shadow-sm">
         <div className="flex items-start gap-4">

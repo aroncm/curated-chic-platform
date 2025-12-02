@@ -19,14 +19,17 @@ export default function RootLayout({
         <div className="min-h-screen flex flex-col">
           <header className="border-b bg-white">
             <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-              <div className="font-semibold text-sm">VintageLab</div>
+              <div className="font-semibold text-lg">VintageLab</div>
               <div className="flex items-center gap-6">
-                <nav className="flex gap-4 text-xs">
+                <nav className="flex gap-4 text-sm">
                   <Link href="/items" className="hover:underline">
                     Add Items
                   </Link>
                   <Link href="/inventory" className="hover:underline">
                     Inventory
+                  </Link>
+                  <Link href="/listings" className="hover:underline">
+                    Listing
                   </Link>
                   <Link href="/inventory/metadata" className="hover:underline">
                     Metadata

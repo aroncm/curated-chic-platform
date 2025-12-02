@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import { AiStatusBanner } from '@/components/AiStatusBanner';
 import { AnalysisResultsView } from '@/components/AnalysisResultsView';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,6 +70,13 @@ export default async function ItemDetailPage({
 
   return (
     <main className="space-y-6">
+      <Breadcrumb
+        items={[
+          { label: 'Inventory', href: '/inventory' },
+          { label: itemData.title || 'Item Details' },
+        ]}
+      />
+
       <AiStatusBanner status={(itemData as any).ai_status} error={(itemData as any).ai_error} />
 
       <div className="flex justify-between items-center">

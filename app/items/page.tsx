@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import { AddItemForm } from '@/components/AddItemForm';
 import { ItemsQueueList } from '@/components/ItemsQueueList';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,6 +53,8 @@ export default async function ItemsPage() {
 
   return (
     <main className="space-y-6">
+      <Breadcrumb items={[{ label: 'Add Items' }]} />
+
       {/* Add Item Form */}
       <AddItemForm />
 
