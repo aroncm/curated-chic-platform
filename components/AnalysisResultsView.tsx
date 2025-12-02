@@ -128,29 +128,34 @@ export function AnalysisResultsView({
 
     setSaving(true);
     try {
+      const payload = {
+        title: itemName.trim(),
+        category: category.trim(),
+        condition_summary: condition.trim(),
+        cost: cost ? Number(cost) : null,
+        listing_price: listingPrice ? Number(listingPrice) : null,
+        sales_price: salesPrice ? Number(salesPrice) : null,
+      };
+
+      console.log('Saving item with payload:', payload);
+
       const response = await fetch(`/api/items/${itemId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: itemName.trim(),
-          category: category.trim(),
-          condition_summary: condition.trim(),
-          cost: cost ? Number(cost) : null,
-          listing_price: listingPrice ? Number(listingPrice) : null,
-          sales_price: salesPrice ? Number(salesPrice) : null,
-          // Note: inventory_location and sales_fees will be added in future updates
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save item');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Server error:', errorData);
+        throw new Error(errorData.error || 'Failed to save item');
       }
 
       router.refresh();
       alert('Item saved successfully!');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving item:', err);
-      alert('Failed to save item');
+      alert(`Failed to save item: ${err.message}`);
     } finally {
       setSaving(false);
     }
