@@ -19,7 +19,8 @@ type IngestRequest = {
   title: string;
   images: Array<{
     filename: string;
-    data: string; // base64 encoded
+    data?: string; // base64 encoded (optional)
+    url?: string; // or URL to fetch from
     mimeType?: string;
   }>;
   owner_email?: string; // Optional: to associate with specific user
@@ -105,6 +106,11 @@ async function getImportUserId(
  * Convert base64 string to Buffer
  */
 function base64ToBuffer(base64: string): Buffer {
+  // Safety check
+  if (!base64 || typeof base64 !== 'string') {
+    throw new Error('Invalid base64 data: must be a non-empty string');
+  }
+
   // Remove data URI prefix if present (e.g., "data:image/jpeg;base64,")
   const base64Data = base64.includes(',') ? base64.split(',')[1] : base64;
   return Buffer.from(base64Data, 'base64');
@@ -273,8 +279,49 @@ export async function POST(req: NextRequest) {
       const image = body.images[i];
 
       try {
-        const imageBuffer = base64ToBuffer(image.data);
+        let imageBuffer: Buffer;
         const mimeType = image.mimeType || 'image/jpeg';
+
+        // Log what we received for debugging
+        console.log(`Processing image ${i}:`, {
+          hasUrl: !!image.url,
+          hasData: !!image.data,
+          urlType: typeof image.url,
+          dataType: typeof image.data,
+          filename: image.filename,
+        });
+
+        // Check if image is provided as URL or base64
+        if (image.url && typeof image.url === 'string' && image.url.length > 0) {
+          // Fetch image from URL
+          console.log(`Fetching image from URL: ${image.url.substring(0, 100)}...`);
+
+          const response = await fetch(image.url, {
+            headers: {
+              'User-Agent': 'VintageLab-Zapier-Integration/1.0',
+            },
+          });
+
+          if (!response.ok) {
+            const errorMsg = `Failed to fetch image from URL (${response.status}): ${response.statusText}`;
+            console.error(errorMsg);
+            uploadErrors.push(errorMsg);
+            continue;
+          }
+
+          const arrayBuffer = await response.arrayBuffer();
+          console.log(`Fetched ${arrayBuffer.byteLength} bytes from URL`);
+          imageBuffer = Buffer.from(arrayBuffer);
+        } else if (image.data && typeof image.data === 'string' && image.data.length > 0) {
+          // Convert base64 to buffer
+          console.log(`Converting base64 data (${image.data.length} chars)`);
+          imageBuffer = base64ToBuffer(image.data);
+        } else {
+          const errorMsg = `Image ${i} must have either valid 'url' or 'data' field`;
+          console.error(errorMsg, { image });
+          uploadErrors.push(errorMsg);
+          continue;
+        }
 
         const { url, error: uploadError } = await uploadImage(
           supabase,
