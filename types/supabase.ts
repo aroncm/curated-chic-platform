@@ -172,6 +172,7 @@ export interface Database {
           estimated_low_price: number | null
           estimated_high_price: number | null
           suggested_list_price: number | null
+          reasoning: string | null
           ai_status: string
           ai_error: string | null
           category_id: string | null
@@ -179,6 +180,7 @@ export interface Database {
           condition_grade: string | null
           is_restored: boolean
           is_deleted: boolean
+          import_source: string | null
           created_at: string | null
         }
         Insert: {
@@ -196,6 +198,7 @@ export interface Database {
           estimated_low_price?: number | null
           estimated_high_price?: number | null
           suggested_list_price?: number | null
+          reasoning?: string | null
           ai_status?: string
           ai_error?: string | null
           category_id?: string | null
@@ -203,6 +206,7 @@ export interface Database {
           condition_grade?: string | null
           is_restored?: boolean
           is_deleted?: boolean
+          import_source?: string | null
           created_at?: string | null
         }
         Update: {
@@ -220,6 +224,7 @@ export interface Database {
           estimated_low_price?: number | null
           estimated_high_price?: number | null
           suggested_list_price?: number | null
+          reasoning?: string | null
           ai_status?: string
           ai_error?: string | null
           category_id?: string | null
@@ -227,6 +232,7 @@ export interface Database {
           condition_grade?: string | null
           is_restored?: boolean
           is_deleted?: boolean
+          import_source?: string | null
           created_at?: string | null
         }
 

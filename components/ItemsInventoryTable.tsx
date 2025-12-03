@@ -122,9 +122,9 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'new':
-        return 'Unlisted';
+        return 'New';
       case 'identified':
-        return 'Unlisted';
+        return 'Identified';
       case 'listed':
         return 'Listed';
       case 'sold':
@@ -137,14 +137,15 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'new':
+        return 'bg-amber-500 text-white';
       case 'identified':
-        return 'bg-slate-100 text-slate-700';
+        return 'bg-slate-600 text-white';
       case 'listed':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-blue-600 text-white';
       case 'sold':
-        return 'bg-green-100 text-green-700';
+        return 'bg-green-600 text-white';
       default:
-        return 'bg-slate-100 text-slate-700';
+        return 'bg-slate-600 text-white';
     }
   };
 
