@@ -1,7 +1,8 @@
 import json
 
-# Get subject/title
+# Get subject/title and sender email
 subject = input_data.get('email_subject', 'Unnamed Item')
+from_email = input_data.get('from_email', None)
 
 # Initialize images array
 images = []
@@ -29,7 +30,8 @@ for i in range(1, 6):
 # Create the payload object
 payload = {
     'title': subject.strip() if subject else 'Unnamed Item',
-    'images': images
+    'images': images,
+    'owner_email': from_email
 }
 
 # Return JSON string

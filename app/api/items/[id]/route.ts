@@ -293,12 +293,27 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    // Soft delete: set is_deleted to true
-    const { error } = await supabase
+    // Check if user is admin
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single();
+
+    const isAdmin = profile?.is_admin || false;
+
+    // Build delete query - admins can delete any item, regular users only their own
+    let query = supabase
       .from('items')
       .update({ is_deleted: true })
-      .eq('id', id)
-      .eq('owner_id', user.id);
+      .eq('id', id);
+
+    // Only filter by owner_id if not admin
+    if (!isAdmin) {
+      query = query.eq('owner_id', user.id);
+    }
+
+    const { error } = await query;
 
     if (error) {
       console.error('Error deleting item:', error);

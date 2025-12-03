@@ -51,34 +51,21 @@ function validateApiKey(req: NextRequest): boolean {
 }
 
 /**
- * Get or create the import user's ID
+ * Get or create the import user's ID from email address
  */
 async function getImportUserId(
-  supabase: ReturnType<typeof createClient<Database>>
+  supabase: ReturnType<typeof createClient<Database>>,
+  ownerEmail: string | null | undefined
 ): Promise<{ userId: string | null; error?: string }> {
-  const importEmail = process.env.ZAPIER_IMPORT_USER_EMAIL;
+  // Use provided email or fall back to environment variable
+  const importEmail = ownerEmail || process.env.ZAPIER_IMPORT_USER_EMAIL;
 
   if (!importEmail) {
     return {
       userId: null,
-      error: 'ZAPIER_IMPORT_USER_EMAIL not configured',
+      error: 'No owner email provided and ZAPIER_IMPORT_USER_EMAIL not configured',
     };
   }
-
-  // Query auth.users to find the import user by email
-  const { data, error } = await supabase
-    .from('items')
-    .select('owner_id')
-    .limit(1)
-    .maybeSingle();
-
-  if (error && error.code !== 'PGRST116') {
-    console.error('Error querying for import user:', error);
-  }
-
-  // For now, we'll use a simple approach: the import user must exist in Supabase Auth
-  // You can create this user manually in Supabase Dashboard > Authentication > Users
-  // Use the email configured in ZAPIER_IMPORT_USER_EMAIL
 
   // Fetch user by email using admin API
   const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
@@ -95,7 +82,7 @@ async function getImportUserId(
   if (!importUser) {
     return {
       userId: null,
-      error: `Import user not found: ${importEmail}. Please create this user in Supabase Auth.`,
+      error: `User not found: ${importEmail}. Please create this user in Supabase Auth first.`,
     };
   }
 
@@ -236,8 +223,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 5. Get import user ID
-    const { userId, error: userError } = await getImportUserId(supabase);
+    // 5. Get import user ID (use sender email if provided)
+    const { userId, error: userError } = await getImportUserId(supabase, body.owner_email);
 
     if (userError || !userId) {
       return NextResponse.json(
