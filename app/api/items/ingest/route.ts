@@ -298,6 +298,22 @@ export async function POST(req: NextRequest) {
 
           const arrayBuffer = await response.arrayBuffer();
           console.log(`Fetched ${arrayBuffer.byteLength} bytes from URL`);
+
+          // Validate image data is not empty
+          if (arrayBuffer.byteLength === 0) {
+            const errorMsg = `Image ${i} fetched but has 0 bytes - URL may have expired`;
+            console.error(errorMsg);
+            uploadErrors.push(errorMsg);
+            continue;
+          }
+
+          if (arrayBuffer.byteLength < 100) {
+            const errorMsg = `Image ${i} suspiciously small (${arrayBuffer.byteLength} bytes) - may be corrupted`;
+            console.error(errorMsg);
+            uploadErrors.push(errorMsg);
+            continue;
+          }
+
           imageBuffer = Buffer.from(arrayBuffer);
         } else if (image.data && typeof image.data === 'string' && image.data.length > 0) {
           // Convert base64 to buffer
