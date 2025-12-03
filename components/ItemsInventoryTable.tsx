@@ -375,6 +375,23 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
                       </div>
                     </div>
 
+                    {/* Fees (Shipping + Platform + Other) */}
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-500 mb-1">
+                        Fees
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
+                        <input
+                          type="text"
+                          value={formatCurrency(item.total_fees)}
+                          disabled
+                          className="w-full pl-5 pr-2 py-1.5 border border-slate-300 rounded text-xs bg-slate-50 text-slate-700"
+                          title="Total of shipping, platform, and other fees"
+                        />
+                      </div>
+                    </div>
+
                     {/* Date Sold */}
                     <div>
                       <label className="block text-[10px] font-medium text-slate-500 mb-1">
@@ -392,23 +409,6 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
                         disabled={!isEditing}
                         className="w-full px-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-700"
                       />
-                    </div>
-
-                    {/* Fees (Shipping + Platform + Other) */}
-                    <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">
-                        Fees
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
-                        <input
-                          type="text"
-                          value={formatCurrency(item.total_fees)}
-                          disabled
-                          className="w-full pl-5 pr-2 py-1.5 border border-slate-300 rounded text-xs bg-slate-50 text-slate-700"
-                          title="Total of shipping, platform, and other fees"
-                        />
-                      </div>
                     </div>
                   </div>
                 </div>
