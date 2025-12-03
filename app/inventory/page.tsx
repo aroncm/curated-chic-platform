@@ -20,8 +20,17 @@ export default async function InventoryPage() {
     );
   }
 
-  // Fetch all items with related data
-  const { data: allItems, error: allItemsError } = await supabase
+  // Check if user is admin
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single();
+
+  const isAdmin = profile?.is_admin || false;
+
+  // Build query - admins see all items, regular users see only their own
+  let query = supabase
     .from('items')
     .select(
       `
@@ -36,9 +45,15 @@ export default async function InventoryPage() {
       sales(sale_price, sale_date, shipping_cost, platform_fees, other_fees)
     `
     )
-    .eq('owner_id', user.id)
     .eq('is_deleted', false)
     .order('created_at', { ascending: false });
+
+  // Only filter by owner_id if not admin
+  if (!isAdmin) {
+    query = query.eq('owner_id', user.id);
+  }
+
+  const { data: allItems, error: allItemsError } = await query;
 
   if (allItemsError) {
     return (
