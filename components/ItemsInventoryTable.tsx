@@ -21,6 +21,7 @@ type ItemInventoryRow = {
   platform_fees: number | null;
   other_fees: number | null;
   total_fees: number | null;
+  import_source?: 'manual' | 'email';
 };
 
 type ItemsInventoryTableProps = {
@@ -211,12 +212,22 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
                   {/* Header Row: Title and Actions */}
                   <div className="flex items-start justify-between gap-4 mb-2">
                     <div className="flex-1 min-w-0">
-                      <Link
-                        href={`/items/${item.id}`}
-                        className="text-base font-semibold text-emerald-600 hover:text-emerald-700 hover:underline block"
-                      >
-                        {item.title}
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/items/${item.id}`}
+                          className="text-base font-semibold text-emerald-600 hover:text-emerald-700 hover:underline"
+                        >
+                          {item.title}
+                        </Link>
+                        {item.import_source === 'email' && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                            <svg className="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            Email
+                          </span>
+                        )}
+                      </div>
                       {!isEditing && item.platform && (
                         <span className="text-xs text-slate-500 mt-0.5 block">{item.platform}</span>
                       )}

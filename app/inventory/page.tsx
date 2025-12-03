@@ -29,6 +29,7 @@ export default async function InventoryPage() {
       title,
       status,
       suggested_list_price,
+      import_source,
       item_images(url),
       purchases(purchase_price, additional_costs),
       listings(listing_price, date_listed, listing_platforms(name)),
@@ -82,6 +83,7 @@ export default async function InventoryPage() {
       platform_fees: sale?.platform_fees ? Number(sale.platform_fees) : null,
       other_fees: sale?.other_fees ? Number(sale.other_fees) : null,
       total_fees: totalFees,
+      import_source: item.import_source,
     };
   });
 

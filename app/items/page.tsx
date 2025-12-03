@@ -24,7 +24,7 @@ export default async function ItemsPage() {
   // Fetch queued items (status='new' AND ai_status='idle')
   const { data: queuedItems, error: queueError } = await supabase
     .from('items')
-    .select('id, title, created_at, ai_status, item_images(url)')
+    .select('id, title, created_at, ai_status, import_source, item_images(url)')
     .eq('owner_id', user.id)
     .eq('status', 'new')
     .eq('ai_status', 'idle')
@@ -49,6 +49,7 @@ export default async function ItemsPage() {
     ai_status: item.ai_status,
     image_count: item.item_images?.length || 0,
     thumbnail_url: item.item_images?.[0]?.url || undefined,
+    import_source: item.import_source,
   }));
 
   return (

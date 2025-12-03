@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
         ai_status: 'idle', // Will be analyzed when user triggers it
         is_deleted: false,
         is_restored: false,
+        import_source: 'manual',
       })
       .select()
       .single();

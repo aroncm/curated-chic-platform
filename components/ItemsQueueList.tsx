@@ -10,6 +10,7 @@ type QueuedItem = {
   ai_status: 'idle' | 'pending' | 'complete' | 'error';
   image_count: number;
   thumbnail_url?: string;
+  import_source?: 'manual' | 'email';
 };
 
 type ItemsQueueListProps = {
@@ -119,6 +120,14 @@ export function ItemsQueueList({ items }: ItemsQueueListProps) {
                 <span className="w-2 h-2 rounded-full bg-gray-400 mr-1.5"></span>
                 Queued
               </span>
+              {item.import_source === 'email' && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                  <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Email
+                </span>
+              )}
             </div>
           </div>
         ))}

@@ -250,6 +250,7 @@ export async function POST(req: NextRequest) {
         ai_status: 'idle',
         is_deleted: false,
         is_restored: false,
+        import_source: 'email',
       })
       .select()
       .single();
