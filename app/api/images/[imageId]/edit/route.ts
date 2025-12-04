@@ -117,7 +117,18 @@ export async function POST(
     console.log(`Sending edit request to Gemini with prompt: ${prompt}`);
 
     // Generate edited image using Gemini 2.0 Flash
-    const result = await model.generateContent([prompt, imagePart]);
+    // We need to pass both the image and text prompt together
+    const result = await model.generateContent({
+      contents: [
+        {
+          role: 'user',
+          parts: [imagePart, { text: prompt }],
+        },
+      ],
+      generationConfig: {
+        responseMimeType: 'image/png',
+      },
+    });
     const response = result.response;
 
     // Check if response contains an image
