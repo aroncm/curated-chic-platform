@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import { AiStatusBanner } from '@/components/AiStatusBanner';
 import { AnalysisResultsView } from '@/components/AnalysisResultsView';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { AnalyzeButton } from '@/components/AnalyzeButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -90,11 +91,7 @@ export default async function ItemDetailPage({
         </div>
         {itemData.ai_status === 'idle' && (
           <div className="flex gap-2">
-            <form action={`/api/items/${itemData.id}/analyze`} method="post">
-              <button className="bg-emerald-600 text-white px-4 py-2 rounded text-sm">
-                Analyze This Item
-              </button>
-            </form>
+            <AnalyzeButton itemId={itemData.id} />
           </div>
         )}
       </div>
