@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
-import { VertexAI } from '@google-cloud/vertexai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60 seconds for image processing
 
-// Imagen pricing: $0.02 per image for edit operations
-const IMAGEN_COST_PER_EDIT = 0.02;
+// Gemini 2.0 Flash image generation is free tier with good limits
+const GEMINI_COST_PER_IMAGE = 0; // Free during preview
 
 type Usage = {
   prompt_tokens: number | null;
@@ -14,21 +14,33 @@ type Usage = {
   total_cost_usd: number | null;
 };
 
+function calculateUsageCost(rawUsage: any): Usage {
+  const prompt_tokens = rawUsage?.promptTokenCount ?? null;
+  const completion_tokens = rawUsage?.candidatesTokenCount ?? null;
+
+  return {
+    prompt_tokens,
+    completion_tokens,
+    total_cost_usd: GEMINI_COST_PER_IMAGE,
+  };
+}
+
 async function logUsage(
   supabase: ReturnType<typeof createSupabaseServerClient>,
   userId: string,
   imageId: string,
-  cost: number
+  usage: Usage
 ) {
+  if (usage.prompt_tokens == null && usage.completion_tokens == null) return;
   await supabase.from('ai_usage').insert({
     user_id: userId,
     item_id: null,
     listing_id: null,
     endpoint: 'image_edit',
-    model: 'imagen-3.0-generate-001',
-    prompt_tokens: null,
-    completion_tokens: null,
-    total_cost_usd: cost,
+    model: 'gemini-2.0-flash-preview-image-generation',
+    prompt_tokens: usage.prompt_tokens,
+    completion_tokens: usage.completion_tokens,
+    total_cost_usd: usage.total_cost_usd,
   } as any);
 }
 
@@ -36,16 +48,9 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ imageId: string }> }
 ) {
-  if (!process.env.GOOGLE_CLOUD_PROJECT) {
+  if (!process.env.GOOGLE_AI_API_KEY) {
     return NextResponse.json(
-      { error: 'GOOGLE_CLOUD_PROJECT not configured on server.' },
-      { status: 500 }
-    );
-  }
-
-  if (!process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
-    return NextResponse.json(
-      { error: 'GOOGLE_APPLICATION_CREDENTIALS_JSON not configured on server.' },
+      { error: 'GOOGLE_AI_API_KEY not configured on server.' },
       { status: 500 }
     );
   }
@@ -95,24 +100,13 @@ export async function POST(
 
     console.log(`Downloaded ${imageBuffer.byteLength} bytes, mime type: ${mimeType}`);
 
-    // Parse Google credentials from JSON string
-    const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
-
-    // Initialize Vertex AI with credentials
-    const vertexAI = new VertexAI({
-      project: process.env.GOOGLE_CLOUD_PROJECT,
-      location: 'us-central1',
-      googleAuthOptions: {
-        credentials: credentials,
-      },
+    // Initialize Gemini with image generation model
+    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash-preview-image-generation',
     });
 
-    // Get the Imagen model
-    const generativeModel = vertexAI.getGenerativeModel({
-      model: 'imagen-3.0-generate-001',
-    });
-
-    // Prepare the image part for Imagen
+    // Prepare the image part for Gemini
     const imagePart = {
       inlineData: {
         data: Buffer.from(imageBuffer).toString('base64'),
@@ -120,31 +114,20 @@ export async function POST(
       },
     };
 
-    console.log(`Sending edit request to Imagen with prompt: ${prompt}`);
+    console.log(`Sending edit request to Gemini with prompt: ${prompt}`);
 
-    // Generate edited image using Imagen
-    const result = await generativeModel.generateContent({
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            imagePart,
-            { text: prompt }
-          ],
-        },
-      ],
-    });
-
+    // Generate edited image using Gemini 2.0 Flash
+    const result = await model.generateContent([prompt, imagePart]);
     const response = result.response;
 
     // Check if response contains an image
     if (!response.candidates || response.candidates.length === 0) {
-      throw new Error('No candidates returned from Imagen');
+      throw new Error('No candidates returned from Gemini');
     }
 
     const candidate = response.candidates[0];
     if (!candidate.content || !candidate.content.parts) {
-      throw new Error('No content parts in Imagen response');
+      throw new Error('No content parts in Gemini response');
     }
 
     // Find the inline data (image) in the response
@@ -160,10 +143,10 @@ export async function POST(
     }
 
     if (!editedImageData) {
-      throw new Error('No image data returned from Imagen');
+      throw new Error('No image data returned from Gemini');
     }
 
-    console.log(`Received edited image from Imagen, mime type: ${editedMimeType}`);
+    console.log(`Received edited image from Gemini, mime type: ${editedMimeType}`);
 
     // Convert base64 to buffer
     const editedBuffer = Buffer.from(editedImageData, 'base64');
@@ -196,6 +179,9 @@ export async function POST(
     const editedUrl = urlData.publicUrl;
     console.log(`Edited image uploaded to: ${editedUrl}`);
 
+    // Calculate usage
+    const usage = calculateUsageCost(result.response.usageMetadata);
+
     // Update the item_images record with edited image info
     const { error: updateError } = await supabase
       .from('item_images')
@@ -213,7 +199,7 @@ export async function POST(
 
     // Log usage
     try {
-      await logUsage(supabase, user.id, imageId, IMAGEN_COST_PER_EDIT);
+      await logUsage(supabase, user.id, imageId, usage);
     } catch (logErr) {
       console.error('Failed to log AI usage', logErr);
     }
@@ -223,11 +209,7 @@ export async function POST(
       edited_url: editedUrl,
       original_url: originalImageUrl,
       prompt: prompt,
-      usage: {
-        prompt_tokens: null,
-        completion_tokens: null,
-        total_cost_usd: IMAGEN_COST_PER_EDIT,
-      },
+      usage,
     });
   } catch (e: any) {
     console.error('Image editing failed', e);
