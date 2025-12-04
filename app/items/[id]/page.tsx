@@ -39,7 +39,7 @@ export default async function ItemDetailPage({
         'ai_status',
         'ai_error',
         'owner_id',
-        'item_images(*)',
+        'item_images(id, url, edited_url)',
         'purchases(*)',
         'listings(*)',
         'sales(*)',

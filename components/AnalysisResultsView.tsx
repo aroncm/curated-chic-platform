@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { EditImageButton } from './EditImageButton';
 
 type AnalysisData = {
   category: string;
@@ -22,6 +23,7 @@ type AnalysisData = {
 type ItemImage = {
   id: string;
   url: string;
+  edited_url?: string | null;
 };
 
 type AnalysisResultsViewProps = {
@@ -171,14 +173,28 @@ export function AnalysisResultsView({
         {/* Images */}
         {images.length > 0 && (
           <div className="mb-6">
-            <div className="flex gap-4 overflow-x-auto">
+            <h3 className="text-sm font-semibold mb-3">Product Images</h3>
+            <div className="flex gap-4 overflow-x-auto pb-2">
               {images.map((img: ItemImage) => (
-                <div key={img.id} className="relative w-40 h-40 flex-shrink-0">
-                  <Image
-                    src={img.url}
-                    alt="Item"
-                    fill
-                    className="object-cover rounded"
+                <div key={img.id} className="flex-shrink-0">
+                  <div className="relative w-40 h-40 mb-2">
+                    <Image
+                      src={img.edited_url || img.url}
+                      alt="Item"
+                      fill
+                      className="object-cover rounded border border-slate-200"
+                    />
+                    {img.edited_url && (
+                      <div className="absolute top-1 left-1 bg-purple-600 text-white text-xs px-2 py-0.5 rounded">
+                        Edited
+                      </div>
+                    )}
+                  </div>
+                  <EditImageButton
+                    imageId={img.id}
+                    originalUrl={img.url}
+                    editedUrl={img.edited_url}
+                    itemTitle={currentTitle}
                   />
                 </div>
               ))}
