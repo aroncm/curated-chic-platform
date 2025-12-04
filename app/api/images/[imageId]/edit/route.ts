@@ -5,8 +5,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60 seconds for image processing
 
-const INPUT_RATE_PER_TOKEN = 0.075 / 1_000_000; // Gemini 2.5 Flash input $0.075 / 1M tokens
-const OUTPUT_RATE_PER_TOKEN = 0.3 / 1_000_000; // Gemini 2.5 Flash output $0.30 / 1M tokens
+const INPUT_RATE_PER_TOKEN = 0.075 / 1_000_000; // Gemini 1.5 Flash input $0.075 / 1M tokens
+const OUTPUT_RATE_PER_TOKEN = 0.3 / 1_000_000; // Gemini 1.5 Flash output $0.30 / 1M tokens
 
 type Usage = {
   prompt_tokens: number | null;
@@ -44,7 +44,7 @@ async function logUsage(
     item_id: null,
     listing_id: null,
     endpoint: 'image_edit',
-    model: 'gemini-2.5-flash',
+    model: 'gemini-1.5-flash',
     prompt_tokens: usage.prompt_tokens,
     completion_tokens: usage.completion_tokens,
     total_cost_usd: usage.total_cost_usd,
@@ -109,7 +109,7 @@ export async function POST(
 
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     // Prepare the image part for Gemini
     const imagePart = {
