@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { VertexAI } from '@google-cloud/vertexai';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60 seconds for image processing
 
-const INPUT_RATE_PER_TOKEN = 0.075 / 1_000_000; // Gemini 1.5 Flash input $0.075 / 1M tokens
-const OUTPUT_RATE_PER_TOKEN = 0.3 / 1_000_000; // Gemini 1.5 Flash output $0.30 / 1M tokens
+// Imagen pricing: $0.02 per image for edit operations
+const IMAGEN_COST_PER_EDIT = 0.02;
 
 type Usage = {
   prompt_tokens: number | null;
@@ -14,40 +14,21 @@ type Usage = {
   total_cost_usd: number | null;
 };
 
-function calculateUsageCost(rawUsage: any): Usage {
-  const prompt_tokens = rawUsage?.promptTokenCount ?? null;
-  const completion_tokens = rawUsage?.candidatesTokenCount ?? null;
-
-  if (prompt_tokens == null && completion_tokens == null) {
-    return { prompt_tokens: null, completion_tokens: null, total_cost_usd: null };
-  }
-
-  const promptCost = prompt_tokens != null ? prompt_tokens * INPUT_RATE_PER_TOKEN : 0;
-  const completionCost = completion_tokens != null ? completion_tokens * OUTPUT_RATE_PER_TOKEN : 0;
-
-  return {
-    prompt_tokens,
-    completion_tokens,
-    total_cost_usd: Number((promptCost + completionCost).toFixed(6)),
-  };
-}
-
 async function logUsage(
   supabase: ReturnType<typeof createSupabaseServerClient>,
   userId: string,
   imageId: string,
-  usage: Usage
+  cost: number
 ) {
-  if (usage.prompt_tokens == null && usage.completion_tokens == null) return;
   await supabase.from('ai_usage').insert({
     user_id: userId,
     item_id: null,
     listing_id: null,
     endpoint: 'image_edit',
-    model: 'gemini-1.5-flash',
-    prompt_tokens: usage.prompt_tokens,
-    completion_tokens: usage.completion_tokens,
-    total_cost_usd: usage.total_cost_usd,
+    model: 'imagen-3.0-generate-001',
+    prompt_tokens: null,
+    completion_tokens: null,
+    total_cost_usd: cost,
   } as any);
 }
 
@@ -55,9 +36,16 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ imageId: string }> }
 ) {
-  if (!process.env.GOOGLE_AI_API_KEY) {
+  if (!process.env.GOOGLE_CLOUD_PROJECT) {
     return NextResponse.json(
-      { error: 'GOOGLE_AI_API_KEY not configured on server.' },
+      { error: 'GOOGLE_CLOUD_PROJECT not configured on server.' },
+      { status: 500 }
+    );
+  }
+
+  if (!process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+    return NextResponse.json(
+      { error: 'GOOGLE_APPLICATION_CREDENTIALS_JSON not configured on server.' },
       { status: 500 }
     );
   }
@@ -107,11 +95,24 @@ export async function POST(
 
     console.log(`Downloaded ${imageBuffer.byteLength} bytes, mime type: ${mimeType}`);
 
-    // Initialize Gemini
-    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+    // Parse Google credentials from JSON string
+    const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
 
-    // Prepare the image part for Gemini
+    // Initialize Vertex AI with credentials
+    const vertexAI = new VertexAI({
+      project: process.env.GOOGLE_CLOUD_PROJECT,
+      location: 'us-central1',
+      googleAuthOptions: {
+        credentials: credentials,
+      },
+    });
+
+    // Get the Imagen model
+    const generativeModel = vertexAI.getGenerativeModel({
+      model: 'imagen-3.0-generate-001',
+    });
+
+    // Prepare the image part for Imagen
     const imagePart = {
       inlineData: {
         data: Buffer.from(imageBuffer).toString('base64'),
@@ -119,20 +120,31 @@ export async function POST(
       },
     };
 
-    console.log(`Sending prompt to Gemini: ${prompt}`);
+    console.log(`Sending edit request to Imagen with prompt: ${prompt}`);
 
-    // Generate edited image using Gemini
-    const result = await model.generateContent([prompt, imagePart]);
+    // Generate edited image using Imagen
+    const result = await generativeModel.generateContent({
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            imagePart,
+            { text: prompt }
+          ],
+        },
+      ],
+    });
+
     const response = result.response;
 
     // Check if response contains an image
     if (!response.candidates || response.candidates.length === 0) {
-      throw new Error('No candidates returned from Gemini');
+      throw new Error('No candidates returned from Imagen');
     }
 
     const candidate = response.candidates[0];
     if (!candidate.content || !candidate.content.parts) {
-      throw new Error('No content parts in Gemini response');
+      throw new Error('No content parts in Imagen response');
     }
 
     // Find the inline data (image) in the response
@@ -148,10 +160,10 @@ export async function POST(
     }
 
     if (!editedImageData) {
-      throw new Error('No image data returned from Gemini');
+      throw new Error('No image data returned from Imagen');
     }
 
-    console.log(`Received edited image from Gemini, mime type: ${editedMimeType}`);
+    console.log(`Received edited image from Imagen, mime type: ${editedMimeType}`);
 
     // Convert base64 to buffer
     const editedBuffer = Buffer.from(editedImageData, 'base64');
@@ -164,7 +176,7 @@ export async function POST(
 
     // Upload edited image to Supabase Storage
     console.log(`Uploading edited image to: ${storagePath}`);
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('item-images')
       .upload(storagePath, editedBuffer, {
         contentType: editedMimeType,
@@ -184,9 +196,6 @@ export async function POST(
     const editedUrl = urlData.publicUrl;
     console.log(`Edited image uploaded to: ${editedUrl}`);
 
-    // Calculate usage
-    const usage = calculateUsageCost(result.response.usageMetadata);
-
     // Update the item_images record with edited image info
     const { error: updateError } = await supabase
       .from('item_images')
@@ -204,7 +213,7 @@ export async function POST(
 
     // Log usage
     try {
-      await logUsage(supabase, user.id, imageId, usage);
+      await logUsage(supabase, user.id, imageId, IMAGEN_COST_PER_EDIT);
     } catch (logErr) {
       console.error('Failed to log AI usage', logErr);
     }
@@ -214,7 +223,11 @@ export async function POST(
       edited_url: editedUrl,
       original_url: originalImageUrl,
       prompt: prompt,
-      usage,
+      usage: {
+        prompt_tokens: null,
+        completion_tokens: null,
+        total_cost_usd: IMAGEN_COST_PER_EDIT,
+      },
     });
   } catch (e: any) {
     console.error('Image editing failed', e);

@@ -150,7 +150,7 @@ export function EditImageButton({
                       background (perfect for eBay, Etsy, Facebook Marketplace)
                     </p>
                     <p className="text-xs text-slate-500">
-                      Uses Google Gemini 2.5 Flash - Cost: ~$0.001 per image
+                      Powered by Google Imagen 3 - Cost: ~$0.02 per image
                     </p>
                   </div>
 
