@@ -1,46 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60 seconds for image processing
 
-// Gemini 2.0 Flash image generation is free tier with good limits
-const GEMINI_COST_PER_IMAGE = 0; // Free during preview
-
-type Usage = {
-  prompt_tokens: number | null;
-  completion_tokens: number | null;
-  total_cost_usd: number | null;
-};
-
-function calculateUsageCost(rawUsage: any): Usage {
-  const prompt_tokens = rawUsage?.promptTokenCount ?? null;
-  const completion_tokens = rawUsage?.candidatesTokenCount ?? null;
-
-  return {
-    prompt_tokens,
-    completion_tokens,
-    total_cost_usd: GEMINI_COST_PER_IMAGE,
-  };
-}
+// Remove.bg pricing: $0.02 per image (50 free images/month)
+const REMOVEBG_COST_PER_IMAGE = 0.02;
 
 async function logUsage(
   supabase: ReturnType<typeof createSupabaseServerClient>,
-  userId: string,
-  imageId: string,
-  usage: Usage
+  userId: string
 ) {
-  if (usage.prompt_tokens == null && usage.completion_tokens == null) return;
   await supabase.from('ai_usage').insert({
     user_id: userId,
     item_id: null,
     listing_id: null,
     endpoint: 'image_edit',
-    model: 'gemini-2.0-flash-exp',
-    prompt_tokens: usage.prompt_tokens,
-    completion_tokens: usage.completion_tokens,
-    total_cost_usd: usage.total_cost_usd,
+    model: 'remove.bg',
+    prompt_tokens: null,
+    completion_tokens: null,
+    total_cost_usd: REMOVEBG_COST_PER_IMAGE,
   } as any);
 }
 
@@ -48,9 +27,9 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ imageId: string }> }
 ) {
-  if (!process.env.GOOGLE_AI_API_KEY) {
+  if (!process.env.REMOVEBG_API_KEY) {
     return NextResponse.json(
-      { error: 'GOOGLE_AI_API_KEY not configured on server.' },
+      { error: 'REMOVEBG_API_KEY not configured on server.' },
       { status: 500 }
     );
   }
@@ -88,84 +67,35 @@ export async function POST(
   const originalImageUrl = image.url;
 
   try {
-    // Download the original image
-    console.log(`Downloading image from: ${originalImageUrl}`);
-    const imageResponse = await fetch(originalImageUrl);
-    if (!imageResponse.ok) {
-      throw new Error(`Failed to download image: ${imageResponse.statusText}`);
-    }
+    console.log(`Processing image: ${originalImageUrl}`);
 
-    const imageBuffer = await imageResponse.arrayBuffer();
-    const mimeType = imageResponse.headers.get('content-type') || 'image/jpeg';
+    // Call remove.bg API
+    const formData = new FormData();
+    formData.append('image_url', originalImageUrl);
+    formData.append('size', 'auto');
+    formData.append('bg_color', 'ffffff'); // White background
 
-    console.log(`Downloaded ${imageBuffer.byteLength} bytes, mime type: ${mimeType}`);
-
-    // Initialize Gemini with image generation model
-    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash-exp',
+    const removeBgResponse = await fetch('https://api.remove.bg/v1.0/removebg', {
+      method: 'POST',
+      headers: {
+        'X-Api-Key': process.env.REMOVEBG_API_KEY,
+      },
+      body: formData,
     });
 
-    // Prepare the image part for Gemini
-    const imagePart = {
-      inlineData: {
-        data: Buffer.from(imageBuffer).toString('base64'),
-        mimeType: mimeType,
-      },
-    };
-
-    console.log(`Sending edit request to Gemini with prompt: ${prompt}`);
-
-    // Generate edited image using Gemini 2.0 Flash
-    // We need to pass both the image and text prompt together
-    const result = await model.generateContent({
-      contents: [
-        {
-          role: 'user',
-          parts: [imagePart, { text: prompt }],
-        },
-      ],
-      generationConfig: {
-        responseMimeType: 'image/png',
-      },
-    });
-    const response = result.response;
-
-    // Check if response contains an image
-    if (!response.candidates || response.candidates.length === 0) {
-      throw new Error('No candidates returned from Gemini');
+    if (!removeBgResponse.ok) {
+      const errorText = await removeBgResponse.text();
+      console.error('Remove.bg error:', errorText);
+      throw new Error(`Remove.bg API failed: ${removeBgResponse.statusText}`);
     }
 
-    const candidate = response.candidates[0];
-    if (!candidate.content || !candidate.content.parts) {
-      throw new Error('No content parts in Gemini response');
-    }
-
-    // Find the inline data (image) in the response
-    let editedImageData: string | null = null;
-    let editedMimeType = 'image/png';
-
-    for (const part of candidate.content.parts) {
-      if (part.inlineData) {
-        editedImageData = part.inlineData.data;
-        editedMimeType = part.inlineData.mimeType || 'image/png';
-        break;
-      }
-    }
-
-    if (!editedImageData) {
-      throw new Error('No image data returned from Gemini');
-    }
-
-    console.log(`Received edited image from Gemini, mime type: ${editedMimeType}`);
-
-    // Convert base64 to buffer
-    const editedBuffer = Buffer.from(editedImageData, 'base64');
+    // Get the edited image as buffer
+    const editedBuffer = Buffer.from(await removeBgResponse.arrayBuffer());
+    console.log(`Received edited image: ${editedBuffer.byteLength} bytes`);
 
     // Generate a unique filename for the edited image
     const timestamp = Date.now();
-    const extension = editedMimeType.split('/')[1] || 'png';
-    const editedFilename = `edited_${timestamp}.${extension}`;
+    const editedFilename = `edited_${timestamp}.png`;
     const storagePath = `${user.id}/${image.item_id}/${editedFilename}`;
 
     // Upload edited image to Supabase Storage
@@ -173,7 +103,7 @@ export async function POST(
     const { error: uploadError } = await supabase.storage
       .from('item-images')
       .upload(storagePath, editedBuffer, {
-        contentType: editedMimeType,
+        contentType: 'image/png',
         upsert: false,
       });
 
@@ -189,9 +119,6 @@ export async function POST(
 
     const editedUrl = urlData.publicUrl;
     console.log(`Edited image uploaded to: ${editedUrl}`);
-
-    // Calculate usage
-    const usage = calculateUsageCost(result.response.usageMetadata);
 
     // Update the item_images record with edited image info
     const { error: updateError } = await supabase
@@ -210,7 +137,7 @@ export async function POST(
 
     // Log usage
     try {
-      await logUsage(supabase, user.id, imageId, usage);
+      await logUsage(supabase, user.id);
     } catch (logErr) {
       console.error('Failed to log AI usage', logErr);
     }
@@ -220,7 +147,6 @@ export async function POST(
       edited_url: editedUrl,
       original_url: originalImageUrl,
       prompt: prompt,
-      usage,
     });
   } catch (e: any) {
     console.error('Image editing failed', e);
