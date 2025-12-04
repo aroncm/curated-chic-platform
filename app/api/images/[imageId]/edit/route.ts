@@ -37,7 +37,7 @@ async function logUsage(
     item_id: null,
     listing_id: null,
     endpoint: 'image_edit',
-    model: 'gemini-2.0-flash-preview-image-generation',
+    model: 'gemini-2.0-flash-exp',
     prompt_tokens: usage.prompt_tokens,
     completion_tokens: usage.completion_tokens,
     total_cost_usd: usage.total_cost_usd,
@@ -103,7 +103,7 @@ export async function POST(
     // Initialize Gemini with image generation model
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash-preview-image-generation',
+      model: 'gemini-2.0-flash-exp',
     });
 
     // Prepare the image part for Gemini
