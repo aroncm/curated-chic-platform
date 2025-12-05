@@ -157,6 +157,7 @@ export async function POST(
       .from('item-images')
       .upload(storagePath, editedBuffer, {
         contentType: 'image/png',
+        cacheControl: '0', // No caching - always fetch fresh
         upsert: false,
       });
 
