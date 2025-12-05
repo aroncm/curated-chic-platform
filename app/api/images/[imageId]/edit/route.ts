@@ -105,38 +105,27 @@ export async function POST(
     const width = imageMetadata.width || 1000;
     const height = imageMetadata.height || 1000;
 
-    // Create Gemini-style studio gradient (extremely subtle, professional product photography)
-    const shadowHeight = Math.floor(height * 0.12); // 12% of image height for shadow
-    console.log('Creating studio gradient with rgb(252,252,252) -> rgb(248,248,248)');
-    const studioBackgroundSvg = `
-      <svg width="${width}" height="${height}">
-        <defs>
-          <!-- Gemini-style gradient: barely perceptible neutral gradient -->
-          <linearGradient id="studioGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style="stop-color:rgb(252,252,252);stop-opacity:1" />
-            <stop offset="50%" style="stop-color:rgb(250,250,250);stop-opacity:1" />
-            <stop offset="100%" style="stop-color:rgb(248,248,248);stop-opacity:1" />
-          </linearGradient>
+    // Create a darker studio-style gradient background
+    // Using RGB(235,235,235) for a noticeably darker gray than white (255,255,255)
+    const bgColor = { r: 235, g: 235, b: 235, alpha: 1 };
+    console.log('Creating studio background with color:', JSON.stringify(bgColor));
 
-          <!-- Extremely soft, natural shadow like Gemini -->
-          <radialGradient id="shadow" cx="50%" cy="92%" r="35%">
-            <stop offset="0%" style="stop-color:rgb(0,0,0);stop-opacity:0.08" />
-            <stop offset="30%" style="stop-color:rgb(0,0,0);stop-opacity:0.04" />
-            <stop offset="60%" style="stop-color:rgb(0,0,0);stop-opacity:0.015" />
-            <stop offset="100%" style="stop-color:rgb(0,0,0);stop-opacity:0" />
-          </radialGradient>
-        </defs>
+    // Create a solid darker gray background
+    const backgroundBuffer = await sharp({
+      create: {
+        width: width,
+        height: height,
+        channels: 4,
+        background: bgColor
+      }
+    })
+    .png()
+    .toBuffer();
 
-        <!-- Background -->
-        <rect width="${width}" height="${height}" fill="url(#studioGradient)" />
+    console.log(`Background buffer created: ${backgroundBuffer.byteLength} bytes`);
 
-        <!-- Shadow underneath object -->
-        <ellipse cx="${width / 2}" cy="${height - shadowHeight / 2}" rx="${width * 0.35}" ry="${shadowHeight}" fill="url(#shadow)" />
-      </svg>
-    `;
-
-    // Composite: gradient background with shadow + transparent object
-    const editedBuffer = await sharp(Buffer.from(studioBackgroundSvg))
+    // Composite: gray background + transparent object
+    const editedBuffer = await sharp(backgroundBuffer)
       .composite([
         {
           input: transparentBuffer, // Add the object on top
@@ -168,12 +157,13 @@ export async function POST(
       throw new Error(`Failed to upload edited image: ${uploadError.message}`);
     }
 
-    // Get public URL for the edited image
+    // Get public URL for the edited image with cache busting
     const { data: urlData } = supabase.storage
       .from('item-images')
       .getPublicUrl(storagePath);
 
-    const editedUrl = urlData.publicUrl;
+    // Add cache-busting parameter to prevent CDN/browser caching
+    const editedUrl = `${urlData.publicUrl}?v=${timestamp}`;
     console.log(`Edited image uploaded to: ${editedUrl}`);
 
     // Update the item_images record with edited image info
