@@ -61,7 +61,9 @@ export function EditImageButton({
 
     try {
       // Fetch the image with cache busting to ensure we get the latest version
-      const cacheBustUrl = `${currentEditedUrl}?t=${Date.now()}`;
+      // Use & if URL already has query params, otherwise use ?
+      const separator = currentEditedUrl.includes('?') ? '&' : '?';
+      const cacheBustUrl = `${currentEditedUrl}${separator}t=${Date.now()}`;
       const response = await fetch(cacheBustUrl, {
         cache: 'no-store', // Force fresh fetch, bypass cache
       });
