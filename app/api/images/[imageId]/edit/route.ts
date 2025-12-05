@@ -99,42 +99,43 @@ export async function POST(
     const transparentBuffer = Buffer.from(await removeBgResponse.arrayBuffer());
     console.log(`Received transparent image: ${transparentBuffer.byteLength} bytes`);
 
-    // Process with sharp to add professional shadow
+    // Process with sharp to add professional studio background and shadow
     const imageMetadata = await sharp(transparentBuffer).metadata();
     const width = imageMetadata.width || 1000;
     const height = imageMetadata.height || 1000;
 
-    // Create a subtle shadow effect (elliptical gradient at the bottom)
-    const shadowHeight = Math.floor(height * 0.15); // 15% of image height
-    const shadowSvg = `
+    // Create studio-style gradient background (light gray gradient like Gemini)
+    const shadowHeight = Math.floor(height * 0.2); // 20% of image height for shadow
+    const studioBackgroundSvg = `
       <svg width="${width}" height="${height}">
         <defs>
-          <radialGradient id="shadow" cx="50%" cy="90%" r="50%">
-            <stop offset="0%" style="stop-color:rgb(0,0,0);stop-opacity:0.15" />
-            <stop offset="70%" style="stop-color:rgb(0,0,0);stop-opacity:0.05" />
+          <!-- Studio gradient background: light gray top to slightly darker bottom -->
+          <linearGradient id="studioGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:rgb(245,245,245);stop-opacity:1" />
+            <stop offset="100%" style="stop-color:rgb(225,225,225);stop-opacity:1" />
+          </linearGradient>
+
+          <!-- Professional shadow -->
+          <radialGradient id="shadow" cx="50%" cy="85%" r="45%">
+            <stop offset="0%" style="stop-color:rgb(0,0,0);stop-opacity:0.25" />
+            <stop offset="50%" style="stop-color:rgb(0,0,0);stop-opacity:0.1" />
             <stop offset="100%" style="stop-color:rgb(0,0,0);stop-opacity:0" />
           </radialGradient>
         </defs>
-        <ellipse cx="${width / 2}" cy="${height - shadowHeight / 2}" rx="${width * 0.4}" ry="${shadowHeight}" fill="url(#shadow)" />
+
+        <!-- Background -->
+        <rect width="${width}" height="${height}" fill="url(#studioGradient)" />
+
+        <!-- Shadow underneath object -->
+        <ellipse cx="${width / 2}" cy="${height - shadowHeight / 2}" rx="${width * 0.45}" ry="${shadowHeight}" fill="url(#shadow)" />
       </svg>
     `;
 
-    // Composite: white background + shadow + transparent object
-    const editedBuffer = await sharp({
-      create: {
-        width,
-        height,
-        channels: 4,
-        background: { r: 255, g: 255, b: 255, alpha: 1 }, // White background
-      },
-    })
+    // Composite: gradient background with shadow + transparent object
+    const editedBuffer = await sharp(Buffer.from(studioBackgroundSvg))
       .composite([
         {
-          input: Buffer.from(shadowSvg), // Add shadow first
-          blend: 'over',
-        },
-        {
-          input: transparentBuffer, // Then add the object
+          input: transparentBuffer, // Add the object on top
           blend: 'over',
         },
       ])
