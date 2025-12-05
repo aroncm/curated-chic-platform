@@ -4,6 +4,7 @@ import sharp from 'sharp';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60 seconds for image processing
+export const runtime = 'nodejs'; // Force Node.js runtime
 
 // Remove.bg pricing: $0.02 per image (50 free images/month)
 const REMOVEBG_COST_PER_IMAGE = 0.02;
@@ -106,6 +107,7 @@ export async function POST(
 
     // Create Gemini-style studio gradient (extremely subtle, professional product photography)
     const shadowHeight = Math.floor(height * 0.12); // 12% of image height for shadow
+    console.log('Creating studio gradient with rgb(252,252,252) -> rgb(248,248,248)');
     const studioBackgroundSvg = `
       <svg width="${width}" height="${height}">
         <defs>
