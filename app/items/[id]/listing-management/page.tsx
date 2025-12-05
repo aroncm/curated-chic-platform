@@ -133,7 +133,7 @@ export default async function ListingManagementPage({
                     {img.edited_url && (
                       <a
                         href={img.edited_url}
-                        download={`${itemData.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_edited.png`}
+                        download={`${itemData.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_edited_${Date.now()}.png`}
                         className="text-xs bg-emerald-600 text-white px-2 py-1 rounded hover:bg-emerald-700 transition-colors flex items-center gap-1"
                         title="Download edited image"
                       >

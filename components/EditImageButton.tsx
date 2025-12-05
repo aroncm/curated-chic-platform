@@ -74,11 +74,12 @@ export function EditImageButton({
 
       const blob = await response.blob();
 
-      // Create a download link
+      // Create a download link with timestamp to prevent caching
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
+      const timestamp = Date.now();
       a.href = url;
-      a.download = `${itemTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_edited.png`;
+      a.download = `${itemTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_edited_${timestamp}.png`;
       document.body.appendChild(a);
       a.click();
 
