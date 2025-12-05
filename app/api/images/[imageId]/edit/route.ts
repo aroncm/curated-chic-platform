@@ -105,26 +105,36 @@ export async function POST(
     const width = imageMetadata.width || 1000;
     const height = imageMetadata.height || 1000;
 
-    // Create a darker studio-style gradient background
-    // Using RGB(235,235,235) for a noticeably darker gray than white (255,255,255)
-    const bgColor = { r: 235, g: 235, b: 235, alpha: 1 };
-    console.log('Creating studio background with color:', JSON.stringify(bgColor));
+    console.log('Creating professional studio gradient background');
 
-    // Create a solid darker gray background
-    const backgroundBuffer = await sharp({
-      create: {
-        width: width,
-        height: height,
-        channels: 4,
-        background: bgColor
-      }
-    })
-    .png()
-    .toBuffer();
+    // Create a subtle gradient SVG: light gray top (248) to slightly darker bottom (238)
+    // Plus a soft shadow at the bottom
+    const studioGradientSVG = `
+      <svg width="${width}" height="${height}">
+        <defs>
+          <linearGradient id="studioGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:rgb(248,248,248);stop-opacity:1" />
+            <stop offset="70%" style="stop-color:rgb(242,242,242);stop-opacity:1" />
+            <stop offset="100%" style="stop-color:rgb(238,238,238);stop-opacity:1" />
+          </linearGradient>
+          <radialGradient id="bottomShadow" cx="50%" cy="95%" r="40%">
+            <stop offset="0%" style="stop-color:rgb(0,0,0);stop-opacity:0.03" />
+            <stop offset="50%" style="stop-color:rgb(0,0,0);stop-opacity:0.01" />
+            <stop offset="100%" style="stop-color:rgb(0,0,0);stop-opacity:0" />
+          </radialGradient>
+        </defs>
+        <rect width="${width}" height="${height}" fill="url(#studioGrad)" />
+        <ellipse cx="${width/2}" cy="${height * 0.95}" rx="${width * 0.4}" ry="${height * 0.08}" fill="url(#bottomShadow)" />
+      </svg>
+    `;
 
-    console.log(`Background buffer created: ${backgroundBuffer.byteLength} bytes`);
+    const backgroundBuffer = await sharp(Buffer.from(studioGradientSVG))
+      .png()
+      .toBuffer();
 
-    // Composite: gray background + transparent object
+    console.log(`Studio gradient background created: ${backgroundBuffer.byteLength} bytes`);
+
+    // Composite: gradient background + transparent object
     const editedBuffer = await sharp(backgroundBuffer)
       .composite([
         {
