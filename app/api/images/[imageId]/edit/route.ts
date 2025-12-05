@@ -104,21 +104,23 @@ export async function POST(
     const width = imageMetadata.width || 1000;
     const height = imageMetadata.height || 1000;
 
-    // Create studio-style gradient background (light gray gradient like Gemini)
-    const shadowHeight = Math.floor(height * 0.2); // 20% of image height for shadow
+    // Create studio-style gradient background (very subtle like professional photography)
+    const shadowHeight = Math.floor(height * 0.18); // 18% of image height for shadow
     const studioBackgroundSvg = `
       <svg width="${width}" height="${height}">
         <defs>
-          <!-- Studio gradient background: light gray top to slightly darker bottom -->
+          <!-- Studio gradient: very subtle, almost white with soft bottom gradient -->
           <linearGradient id="studioGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style="stop-color:rgb(245,245,245);stop-opacity:1" />
-            <stop offset="100%" style="stop-color:rgb(225,225,225);stop-opacity:1" />
+            <stop offset="0%" style="stop-color:rgb(252,252,252);stop-opacity:1" />
+            <stop offset="60%" style="stop-color:rgb(248,248,248);stop-opacity:1" />
+            <stop offset="100%" style="stop-color:rgb(240,240,240);stop-opacity:1" />
           </linearGradient>
 
-          <!-- Professional shadow -->
-          <radialGradient id="shadow" cx="50%" cy="85%" r="45%">
-            <stop offset="0%" style="stop-color:rgb(0,0,0);stop-opacity:0.25" />
-            <stop offset="50%" style="stop-color:rgb(0,0,0);stop-opacity:0.1" />
+          <!-- Soft professional shadow -->
+          <radialGradient id="shadow" cx="50%" cy="88%" r="40%">
+            <stop offset="0%" style="stop-color:rgb(0,0,0);stop-opacity:0.18" />
+            <stop offset="40%" style="stop-color:rgb(0,0,0);stop-opacity:0.08" />
+            <stop offset="70%" style="stop-color:rgb(0,0,0);stop-opacity:0.03" />
             <stop offset="100%" style="stop-color:rgb(0,0,0);stop-opacity:0" />
           </radialGradient>
         </defs>
@@ -127,7 +129,7 @@ export async function POST(
         <rect width="${width}" height="${height}" fill="url(#studioGradient)" />
 
         <!-- Shadow underneath object -->
-        <ellipse cx="${width / 2}" cy="${height - shadowHeight / 2}" rx="${width * 0.45}" ry="${shadowHeight}" fill="url(#shadow)" />
+        <ellipse cx="${width / 2}" cy="${height - shadowHeight / 2}" rx="${width * 0.42}" ry="${shadowHeight}" fill="url(#shadow)" />
       </svg>
     `;
 
