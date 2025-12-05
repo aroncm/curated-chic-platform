@@ -56,6 +56,31 @@ export function EditImageButton({
     }
   };
 
+  const handleDownload = async () => {
+    if (!currentEditedUrl) return;
+
+    try {
+      // Fetch the image
+      const response = await fetch(currentEditedUrl);
+      const blob = await response.blob();
+
+      // Create a download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${itemTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_edited.png`;
+      document.body.appendChild(a);
+      a.click();
+
+      // Cleanup
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download failed:', error);
+      setError('Failed to download image. Please try again.');
+    }
+  };
+
   return (
     <>
       <button
@@ -169,6 +194,29 @@ export function EditImageButton({
                         'Remove Background'
                       )}
                     </button>
+
+                    {currentEditedUrl && (
+                      <button
+                        onClick={handleDownload}
+                        disabled={isEditing}
+                        className="flex-1 bg-emerald-600 text-white px-4 py-2 rounded text-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                          />
+                        </svg>
+                        Download
+                      </button>
+                    )}
 
                     <button
                       onClick={() => setIsModalOpen(false)}
