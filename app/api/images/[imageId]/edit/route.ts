@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
+import sharp from 'sharp';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60 seconds for image processing
@@ -69,7 +70,7 @@ export async function POST(
   try {
     console.log(`Processing image: ${originalImageUrl}`);
 
-    // Call remove.bg API - using Photo Format for better quality and shadow support
+    // Call remove.bg API to get transparent background
     const formData = new FormData();
     formData.append('image_url', originalImageUrl);
     formData.append('size', 'auto');
@@ -77,13 +78,7 @@ export async function POST(
     formData.append('format', 'png'); // PNG format
     formData.append('channels', 'rgba'); // RGBA for transparency
     formData.append('crop', 'false'); // Don't crop
-
-    // Try shadow parameter - note: may require subscription
-    formData.append('shadow', 'true');
-    formData.append('semitransparency', 'true');
-
-    // White background
-    formData.append('bg_color', 'ffffff');
+    formData.append('semitransparency', 'true'); // Preserve glass/transparency
 
     const removeBgResponse = await fetch('https://api.remove.bg/v1.0/removebg', {
       method: 'POST',
@@ -100,9 +95,53 @@ export async function POST(
       throw new Error(`Remove.bg API failed: ${removeBgResponse.statusText}`);
     }
 
-    // Get the edited image as buffer
-    const editedBuffer = Buffer.from(await removeBgResponse.arrayBuffer());
-    console.log(`Received edited image: ${editedBuffer.byteLength} bytes`);
+    // Get the transparent PNG from Remove.bg
+    const transparentBuffer = Buffer.from(await removeBgResponse.arrayBuffer());
+    console.log(`Received transparent image: ${transparentBuffer.byteLength} bytes`);
+
+    // Process with sharp to add professional shadow
+    const imageMetadata = await sharp(transparentBuffer).metadata();
+    const width = imageMetadata.width || 1000;
+    const height = imageMetadata.height || 1000;
+
+    // Create a subtle shadow effect (elliptical gradient at the bottom)
+    const shadowHeight = Math.floor(height * 0.15); // 15% of image height
+    const shadowSvg = `
+      <svg width="${width}" height="${height}">
+        <defs>
+          <radialGradient id="shadow" cx="50%" cy="90%" r="50%">
+            <stop offset="0%" style="stop-color:rgb(0,0,0);stop-opacity:0.15" />
+            <stop offset="70%" style="stop-color:rgb(0,0,0);stop-opacity:0.05" />
+            <stop offset="100%" style="stop-color:rgb(0,0,0);stop-opacity:0" />
+          </radialGradient>
+        </defs>
+        <ellipse cx="${width / 2}" cy="${height - shadowHeight / 2}" rx="${width * 0.4}" ry="${shadowHeight}" fill="url(#shadow)" />
+      </svg>
+    `;
+
+    // Composite: white background + shadow + transparent object
+    const editedBuffer = await sharp({
+      create: {
+        width,
+        height,
+        channels: 4,
+        background: { r: 255, g: 255, b: 255, alpha: 1 }, // White background
+      },
+    })
+      .composite([
+        {
+          input: Buffer.from(shadowSvg), // Add shadow first
+          blend: 'over',
+        },
+        {
+          input: transparentBuffer, // Then add the object
+          blend: 'over',
+        },
+      ])
+      .png()
+      .toBuffer();
+
+    console.log(`Created final image with shadow: ${editedBuffer.byteLength} bytes`);
 
     // Generate a unique filename for the edited image
     const timestamp = Date.now();
