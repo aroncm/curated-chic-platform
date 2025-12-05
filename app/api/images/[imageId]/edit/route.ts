@@ -74,6 +74,8 @@ export async function POST(
     formData.append('image_url', originalImageUrl);
     formData.append('size', 'auto');
     formData.append('bg_color', 'ffffff'); // White background
+    formData.append('add_shadow', 'true'); // Add realistic shadow for professional look
+    formData.append('semitransparency', 'true'); // Preserve glass/transparent elements
 
     const removeBgResponse = await fetch('https://api.remove.bg/v1.0/removebg', {
       method: 'POST',
