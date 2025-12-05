@@ -60,8 +60,16 @@ export function EditImageButton({
     if (!currentEditedUrl) return;
 
     try {
-      // Fetch the image
-      const response = await fetch(currentEditedUrl);
+      // Fetch the image with cache busting to ensure we get the latest version
+      const cacheBustUrl = `${currentEditedUrl}?t=${Date.now()}`;
+      const response = await fetch(cacheBustUrl, {
+        cache: 'no-store', // Force fresh fetch, bypass cache
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch image');
+      }
+
       const blob = await response.blob();
 
       // Create a download link

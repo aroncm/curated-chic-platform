@@ -104,23 +104,23 @@ export async function POST(
     const width = imageMetadata.width || 1000;
     const height = imageMetadata.height || 1000;
 
-    // Create studio-style gradient background (very subtle like professional photography)
-    const shadowHeight = Math.floor(height * 0.18); // 18% of image height for shadow
+    // Create ultra-subtle studio gradient (barely perceptible, like high-end product photography)
+    const shadowHeight = Math.floor(height * 0.15); // 15% of image height for shadow
     const studioBackgroundSvg = `
       <svg width="${width}" height="${height}">
         <defs>
-          <!-- Studio gradient: very subtle, almost white with soft bottom gradient -->
+          <!-- Ultra-subtle gradient: almost pure white -->
           <linearGradient id="studioGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style="stop-color:rgb(252,252,252);stop-opacity:1" />
-            <stop offset="60%" style="stop-color:rgb(248,248,248);stop-opacity:1" />
-            <stop offset="100%" style="stop-color:rgb(240,240,240);stop-opacity:1" />
+            <stop offset="0%" style="stop-color:rgb(254,254,254);stop-opacity:1" />
+            <stop offset="70%" style="stop-color:rgb(250,250,250);stop-opacity:1" />
+            <stop offset="100%" style="stop-color:rgb(245,245,245);stop-opacity:1" />
           </linearGradient>
 
-          <!-- Soft professional shadow -->
-          <radialGradient id="shadow" cx="50%" cy="88%" r="40%">
-            <stop offset="0%" style="stop-color:rgb(0,0,0);stop-opacity:0.18" />
-            <stop offset="40%" style="stop-color:rgb(0,0,0);stop-opacity:0.08" />
-            <stop offset="70%" style="stop-color:rgb(0,0,0);stop-opacity:0.03" />
+          <!-- Very soft shadow with natural falloff -->
+          <radialGradient id="shadow" cx="50%" cy="90%" r="38%">
+            <stop offset="0%" style="stop-color:rgb(0,0,0);stop-opacity:0.12" />
+            <stop offset="35%" style="stop-color:rgb(0,0,0);stop-opacity:0.06" />
+            <stop offset="65%" style="stop-color:rgb(0,0,0);stop-opacity:0.02" />
             <stop offset="100%" style="stop-color:rgb(0,0,0);stop-opacity:0" />
           </radialGradient>
         </defs>
@@ -129,7 +129,7 @@ export async function POST(
         <rect width="${width}" height="${height}" fill="url(#studioGradient)" />
 
         <!-- Shadow underneath object -->
-        <ellipse cx="${width / 2}" cy="${height - shadowHeight / 2}" rx="${width * 0.42}" ry="${shadowHeight}" fill="url(#shadow)" />
+        <ellipse cx="${width / 2}" cy="${height - shadowHeight / 2}" rx="${width * 0.38}" ry="${shadowHeight}" fill="url(#shadow)" />
       </svg>
     `;
 
