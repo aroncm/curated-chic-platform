@@ -69,13 +69,21 @@ export async function POST(
   try {
     console.log(`Processing image: ${originalImageUrl}`);
 
-    // Call remove.bg API
+    // Call remove.bg API - using Photo Format for better quality and shadow support
     const formData = new FormData();
     formData.append('image_url', originalImageUrl);
     formData.append('size', 'auto');
-    formData.append('bg_color', 'ffffff'); // White background
-    formData.append('add_shadow', 'true'); // Add realistic shadow for professional look
-    formData.append('semitransparency', 'true'); // Preserve glass/transparent elements
+    formData.append('type', 'product'); // Product type for better detection
+    formData.append('format', 'png'); // PNG format
+    formData.append('channels', 'rgba'); // RGBA for transparency
+    formData.append('crop', 'false'); // Don't crop
+
+    // Try shadow parameter - note: may require subscription
+    formData.append('shadow', 'true');
+    formData.append('semitransparency', 'true');
+
+    // White background
+    formData.append('bg_color', 'ffffff');
 
     const removeBgResponse = await fetch('https://api.remove.bg/v1.0/removebg', {
       method: 'POST',
@@ -88,6 +96,7 @@ export async function POST(
     if (!removeBgResponse.ok) {
       const errorText = await removeBgResponse.text();
       console.error('Remove.bg error:', errorText);
+      console.error('Remove.bg status:', removeBgResponse.status);
       throw new Error(`Remove.bg API failed: ${removeBgResponse.statusText}`);
     }
 
