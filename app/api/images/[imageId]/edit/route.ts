@@ -105,48 +105,53 @@ export async function POST(
     const width = imageMetadata.width || 1000;
     const height = imageMetadata.height || 1000;
 
-    console.log('Creating pure white background with CSS box-shadow effect');
+    console.log('Creating white background with native Sharp shadow');
 
-    // Replicate CSS box-shadow with two shadow layers:
-    // Layer 1: 0px 15px 25px -10px rgba(0,0,0,0.1) - soft, spread-out
-    // Layer 2: 0px 5px 10px -5px rgba(0,0,0,0.05) - tight, close to object
-    const shadowSVG = `
-      <svg width="${width}" height="${height}">
-        <defs>
-          <!-- Larger, softer shadow (25px blur, offset 15px down, opacity 0.1) -->
-          <radialGradient id="softShadow" cx="50%" cy="65%" r="35%">
-            <stop offset="0%" style="stop-color:rgb(0,0,0);stop-opacity:0.1" />
-            <stop offset="40%" style="stop-color:rgb(0,0,0);stop-opacity:0.05" />
-            <stop offset="70%" style="stop-color:rgb(0,0,0);stop-opacity:0.02" />
-            <stop offset="100%" style="stop-color:rgb(0,0,0);stop-opacity:0" />
-          </radialGradient>
+    // Create pure white background
+    const whiteBackground = await sharp({
+      create: {
+        width: width,
+        height: height,
+        channels: 4,
+        background: { r: 255, g: 255, b: 255, alpha: 1 }
+      }
+    })
+    .png()
+    .toBuffer();
 
-          <!-- Tighter shadow (10px blur, offset 5px down, opacity 0.05) -->
-          <radialGradient id="tightShadow" cx="50%" cy="58%" r="25%">
-            <stop offset="0%" style="stop-color:rgb(0,0,0);stop-opacity:0.05" />
-            <stop offset="50%" style="stop-color:rgb(0,0,0);stop-opacity:0.025" />
-            <stop offset="100%" style="stop-color:rgb(0,0,0);stop-opacity:0" />
-          </radialGradient>
-        </defs>
+    // Create a soft shadow ellipse using Sharp's native operations
+    // This creates a gray ellipse that will be blurred
+    const shadowWidth = Math.floor(width * 0.6);
+    const shadowHeight = Math.floor(height * 0.15);
 
-        <!-- Pure white background -->
-        <rect width="${width}" height="${height}" fill="rgb(255,255,255)" />
+    const shadowEllipse = Buffer.from(
+      `<svg width="${shadowWidth}" height="${shadowHeight}">
+        <ellipse cx="${shadowWidth/2}" cy="${shadowHeight/2}"
+                 rx="${shadowWidth/2}" ry="${shadowHeight/2}"
+                 fill="rgba(0,0,0,0.15)" />
+      </svg>`
+    );
 
-        <!-- Apply shadow layers -->
-        <ellipse cx="${width/2}" cy="${height * 0.65}" rx="${width * 0.35}" ry="${height * 0.12}" fill="url(#softShadow)" />
-        <ellipse cx="${width/2}" cy="${height * 0.58}" rx="${width * 0.25}" ry="${height * 0.08}" fill="url(#tightShadow)" />
-      </svg>
-    `;
-
-    const backgroundBuffer = await sharp(Buffer.from(shadowSVG))
-      .png()
+    // Blur the shadow to make it soft (replicate CSS blur radius)
+    const blurredShadow = await sharp(shadowEllipse)
+      .blur(15) // Blur radius to match CSS box-shadow
       .toBuffer();
 
-    console.log(`White background with box-shadow created: ${backgroundBuffer.byteLength} bytes`);
+    console.log('Shadow created and blurred');
 
-    // Composite: white background + shadows + transparent object
-    const editedBuffer = await sharp(backgroundBuffer)
+    // Position shadow at bottom center of image
+    const shadowLeft = Math.floor((width - shadowWidth) / 2);
+    const shadowTop = Math.floor(height * 0.75); // Position shadow near bottom
+
+    // Composite everything: white bg + blurred shadow + transparent object
+    const editedBuffer = await sharp(whiteBackground)
       .composite([
+        {
+          input: blurredShadow,
+          top: shadowTop,
+          left: shadowLeft,
+          blend: 'over'
+        },
         {
           input: transparentBuffer, // Add the object on top
           blend: 'over',
