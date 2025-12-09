@@ -120,39 +120,37 @@ export async function POST(
     .toBuffer();
 
     // CSS box-shadow: 0px 15px 25px -10px rgba(0,0,0,0.1), 0px 5px 10px -5px rgba(0,0,0,0.05)
-    // Create TWO shadow layers to match CSS
+    // Create TWO shadow layers to match CSS using SVG rectangles
 
     // Shadow 1: Soft, spread-out (15px offset, 25px blur, -10px spread, 0.1 opacity)
     const shadow1Width = Math.floor(width * 0.4); // Smaller due to negative spread
     const shadow1Height = Math.floor(height * 0.08);
 
-    const shadow1 = await sharp({
-      create: {
-        width: shadow1Width,
-        height: shadow1Height,
-        channels: 4,
-        background: { r: 0, g: 0, b: 0, alpha: 0.1 }
-      }
-    })
-    .blur(12) // Half of CSS 25px blur (Sharp blur is sigma, not radius)
-    .toBuffer();
+    const shadow1SVG = Buffer.from(
+      `<svg width="${shadow1Width}" height="${shadow1Height}">
+        <rect width="${shadow1Width}" height="${shadow1Height}" fill="rgba(0,0,0,0.1)" />
+      </svg>`
+    );
+
+    const shadow1 = await sharp(shadow1SVG)
+      .blur(12) // Half of CSS 25px blur (Sharp blur is sigma, not radius)
+      .toBuffer();
 
     // Shadow 2: Tighter, for depth (5px offset, 10px blur, -5px spread, 0.05 opacity)
     const shadow2Width = Math.floor(width * 0.45);
     const shadow2Height = Math.floor(height * 0.06);
 
-    const shadow2 = await sharp({
-      create: {
-        width: shadow2Width,
-        height: shadow2Height,
-        channels: 4,
-        background: { r: 0, g: 0, b: 0, alpha: 0.05 }
-      }
-    })
-    .blur(5) // Half of CSS 10px blur
-    .toBuffer();
+    const shadow2SVG = Buffer.from(
+      `<svg width="${shadow2Width}" height="${shadow2Height}">
+        <rect width="${shadow2Width}" height="${shadow2Height}" fill="rgba(0,0,0,0.05)" />
+      </svg>`
+    );
 
-    console.log('Two shadow layers created');
+    const shadow2 = await sharp(shadow2SVG)
+      .blur(5) // Half of CSS 10px blur
+      .toBuffer();
+
+    console.log('Two shadow layers created from SVG');
 
     // Position shadows at bottom center
     const shadow1Left = Math.floor((width - shadow1Width) / 2);
