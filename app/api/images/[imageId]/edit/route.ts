@@ -105,36 +105,46 @@ export async function POST(
     const width = imageMetadata.width || 1000;
     const height = imageMetadata.height || 1000;
 
-    console.log('Creating professional studio gradient background');
+    console.log('Creating pure white background with CSS box-shadow effect');
 
-    // Create a subtle gradient SVG: light gray top (248) to slightly darker bottom (238)
-    // Plus a soft shadow at the bottom
-    const studioGradientSVG = `
+    // Replicate CSS box-shadow with two shadow layers:
+    // Layer 1: 0px 15px 25px -10px rgba(0,0,0,0.1) - soft, spread-out
+    // Layer 2: 0px 5px 10px -5px rgba(0,0,0,0.05) - tight, close to object
+    const shadowSVG = `
       <svg width="${width}" height="${height}">
         <defs>
-          <linearGradient id="studioGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style="stop-color:rgb(248,248,248);stop-opacity:1" />
-            <stop offset="70%" style="stop-color:rgb(242,242,242);stop-opacity:1" />
-            <stop offset="100%" style="stop-color:rgb(238,238,238);stop-opacity:1" />
-          </linearGradient>
-          <radialGradient id="bottomShadow" cx="50%" cy="95%" r="40%">
-            <stop offset="0%" style="stop-color:rgb(0,0,0);stop-opacity:0.03" />
-            <stop offset="50%" style="stop-color:rgb(0,0,0);stop-opacity:0.01" />
+          <!-- Larger, softer shadow (25px blur, offset 15px down, opacity 0.1) -->
+          <radialGradient id="softShadow" cx="50%" cy="65%" r="35%">
+            <stop offset="0%" style="stop-color:rgb(0,0,0);stop-opacity:0.1" />
+            <stop offset="40%" style="stop-color:rgb(0,0,0);stop-opacity:0.05" />
+            <stop offset="70%" style="stop-color:rgb(0,0,0);stop-opacity:0.02" />
+            <stop offset="100%" style="stop-color:rgb(0,0,0);stop-opacity:0" />
+          </radialGradient>
+
+          <!-- Tighter shadow (10px blur, offset 5px down, opacity 0.05) -->
+          <radialGradient id="tightShadow" cx="50%" cy="58%" r="25%">
+            <stop offset="0%" style="stop-color:rgb(0,0,0);stop-opacity:0.05" />
+            <stop offset="50%" style="stop-color:rgb(0,0,0);stop-opacity:0.025" />
             <stop offset="100%" style="stop-color:rgb(0,0,0);stop-opacity:0" />
           </radialGradient>
         </defs>
-        <rect width="${width}" height="${height}" fill="url(#studioGrad)" />
-        <ellipse cx="${width/2}" cy="${height * 0.95}" rx="${width * 0.4}" ry="${height * 0.08}" fill="url(#bottomShadow)" />
+
+        <!-- Pure white background -->
+        <rect width="${width}" height="${height}" fill="rgb(255,255,255)" />
+
+        <!-- Apply shadow layers -->
+        <ellipse cx="${width/2}" cy="${height * 0.65}" rx="${width * 0.35}" ry="${height * 0.12}" fill="url(#softShadow)" />
+        <ellipse cx="${width/2}" cy="${height * 0.58}" rx="${width * 0.25}" ry="${height * 0.08}" fill="url(#tightShadow)" />
       </svg>
     `;
 
-    const backgroundBuffer = await sharp(Buffer.from(studioGradientSVG))
+    const backgroundBuffer = await sharp(Buffer.from(shadowSVG))
       .png()
       .toBuffer();
 
-    console.log(`Studio gradient background created: ${backgroundBuffer.byteLength} bytes`);
+    console.log(`White background with box-shadow created: ${backgroundBuffer.byteLength} bytes`);
 
-    // Composite: gradient background + transparent object
+    // Composite: white background + shadows + transparent object
     const editedBuffer = await sharp(backgroundBuffer)
       .composite([
         {
