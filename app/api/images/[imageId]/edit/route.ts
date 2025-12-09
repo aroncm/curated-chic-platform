@@ -105,9 +105,9 @@ export async function POST(
     const width = imageMetadata.width || 1000;
     const height = imageMetadata.height || 1000;
 
-    console.log('Creating white background with native Sharp shadow');
+    console.log('Creating pure white background with CSS box-shadow effect');
 
-    // Create pure white background
+    // Create pure white background (#ffffff)
     const whiteBackground = await sharp({
       create: {
         width: width,
@@ -119,37 +119,61 @@ export async function POST(
     .png()
     .toBuffer();
 
-    // Create a soft shadow ellipse using Sharp's native operations
-    // This creates a gray ellipse that will be blurred
-    const shadowWidth = Math.floor(width * 0.6);
-    const shadowHeight = Math.floor(height * 0.15);
+    // CSS box-shadow: 0px 15px 25px -10px rgba(0,0,0,0.1), 0px 5px 10px -5px rgba(0,0,0,0.05)
+    // Create TWO shadow layers to match CSS
 
-    const shadowEllipse = Buffer.from(
-      `<svg width="${shadowWidth}" height="${shadowHeight}">
-        <ellipse cx="${shadowWidth/2}" cy="${shadowHeight/2}"
-                 rx="${shadowWidth/2}" ry="${shadowHeight/2}"
-                 fill="rgba(0,0,0,0.15)" />
-      </svg>`
-    );
+    // Shadow 1: Soft, spread-out (15px offset, 25px blur, -10px spread, 0.1 opacity)
+    const shadow1Width = Math.floor(width * 0.4); // Smaller due to negative spread
+    const shadow1Height = Math.floor(height * 0.08);
 
-    // Blur the shadow to make it soft (replicate CSS blur radius)
-    const blurredShadow = await sharp(shadowEllipse)
-      .blur(15) // Blur radius to match CSS box-shadow
-      .toBuffer();
+    const shadow1 = await sharp({
+      create: {
+        width: shadow1Width,
+        height: shadow1Height,
+        channels: 4,
+        background: { r: 0, g: 0, b: 0, alpha: 0.1 }
+      }
+    })
+    .blur(12) // Half of CSS 25px blur (Sharp blur is sigma, not radius)
+    .toBuffer();
 
-    console.log('Shadow created and blurred');
+    // Shadow 2: Tighter, for depth (5px offset, 10px blur, -5px spread, 0.05 opacity)
+    const shadow2Width = Math.floor(width * 0.45);
+    const shadow2Height = Math.floor(height * 0.06);
 
-    // Position shadow at bottom center of image
-    const shadowLeft = Math.floor((width - shadowWidth) / 2);
-    const shadowTop = Math.floor(height * 0.75); // Position shadow near bottom
+    const shadow2 = await sharp({
+      create: {
+        width: shadow2Width,
+        height: shadow2Height,
+        channels: 4,
+        background: { r: 0, g: 0, b: 0, alpha: 0.05 }
+      }
+    })
+    .blur(5) // Half of CSS 10px blur
+    .toBuffer();
 
-    // Composite everything: white bg + blurred shadow + transparent object
+    console.log('Two shadow layers created');
+
+    // Position shadows at bottom center
+    const shadow1Left = Math.floor((width - shadow1Width) / 2);
+    const shadow1Top = Math.floor(height * 0.80); // 15px offset equivalent
+
+    const shadow2Left = Math.floor((width - shadow2Width) / 2);
+    const shadow2Top = Math.floor(height * 0.78); // 5px offset equivalent
+
+    // Composite: white bg + shadow1 + shadow2 + transparent object
     const editedBuffer = await sharp(whiteBackground)
       .composite([
         {
-          input: blurredShadow,
-          top: shadowTop,
-          left: shadowLeft,
+          input: shadow1,
+          top: shadow1Top,
+          left: shadow1Left,
+          blend: 'over'
+        },
+        {
+          input: shadow2,
+          top: shadow2Top,
+          left: shadow2Left,
           blend: 'over'
         },
         {
