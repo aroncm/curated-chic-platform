@@ -182,11 +182,11 @@ export function EditImageButton({
                 <div className="border-t pt-4">
                   <div className="bg-slate-50 rounded p-4 mb-4">
                     <p className="text-sm text-slate-700 mb-2">
-                      <strong>AI Edit:</strong> Remove background and replace with clean white
-                      background (perfect for eBay, Etsy, Facebook Marketplace)
+                      <strong>AI Edit:</strong> Professional product photography with white background,
+                      studio lighting, and realistic shadows (perfect for eBay, Etsy, Facebook Marketplace)
                     </p>
                     <p className="text-xs text-slate-500">
-                      Powered by Remove.bg - $0.02/image (50 free images/month)
+                      Powered by Google Vertex AI Imagen - ~$0.02/image
                     </p>
                   </div>
 
@@ -202,7 +202,7 @@ export function EditImageButton({
                           Processing...
                         </>
                       ) : (
-                        'Remove Background'
+                        'Create Product Photo'
                       )}
                     </button>
 
