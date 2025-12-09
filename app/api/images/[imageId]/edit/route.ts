@@ -119,59 +119,36 @@ export async function POST(
     .png()
     .toBuffer();
 
-    // CSS box-shadow: 0px 15px 25px -10px rgba(0,0,0,0.1), 0px 5px 10px -5px rgba(0,0,0,0.05)
-    // Create TWO shadow layers to match CSS using SVG rectangles
+    // Create a simple, visible ellipse shadow
+    // Much higher opacity so it's actually visible
+    const shadowWidth = Math.floor(width * 0.5);
+    const shadowHeight = Math.floor(height * 0.1);
 
-    // Shadow 1: Soft, spread-out (15px offset, 25px blur, -10px spread, 0.1 opacity)
-    const shadow1Width = Math.floor(width * 0.4); // Smaller due to negative spread
-    const shadow1Height = Math.floor(height * 0.08);
-
-    const shadow1SVG = Buffer.from(
-      `<svg width="${shadow1Width}" height="${shadow1Height}">
-        <rect width="${shadow1Width}" height="${shadow1Height}" fill="rgba(0,0,0,0.1)" />
+    const shadowSVG = Buffer.from(
+      `<svg width="${shadowWidth}" height="${shadowHeight}">
+        <ellipse cx="${shadowWidth/2}" cy="${shadowHeight/2}"
+                 rx="${shadowWidth/2}" ry="${shadowHeight/2}"
+                 fill="rgba(0,0,0,0.25)" />
       </svg>`
     );
 
-    const shadow1 = await sharp(shadow1SVG)
-      .blur(12) // Half of CSS 25px blur (Sharp blur is sigma, not radius)
+    const shadow = await sharp(shadowSVG)
+      .blur(15)
       .toBuffer();
 
-    // Shadow 2: Tighter, for depth (5px offset, 10px blur, -5px spread, 0.05 opacity)
-    const shadow2Width = Math.floor(width * 0.45);
-    const shadow2Height = Math.floor(height * 0.06);
+    console.log('Shadow created');
 
-    const shadow2SVG = Buffer.from(
-      `<svg width="${shadow2Width}" height="${shadow2Height}">
-        <rect width="${shadow2Width}" height="${shadow2Height}" fill="rgba(0,0,0,0.05)" />
-      </svg>`
-    );
+    // Position shadow at bottom center, directly under object
+    const shadowLeft = Math.floor((width - shadowWidth) / 2);
+    const shadowTop = Math.floor(height * 0.82);
 
-    const shadow2 = await sharp(shadow2SVG)
-      .blur(5) // Half of CSS 10px blur
-      .toBuffer();
-
-    console.log('Two shadow layers created from SVG');
-
-    // Position shadows at bottom center
-    const shadow1Left = Math.floor((width - shadow1Width) / 2);
-    const shadow1Top = Math.floor(height * 0.80); // 15px offset equivalent
-
-    const shadow2Left = Math.floor((width - shadow2Width) / 2);
-    const shadow2Top = Math.floor(height * 0.78); // 5px offset equivalent
-
-    // Composite: white bg + shadow1 + shadow2 + transparent object
+    // Composite: white bg + shadow + transparent object
     const editedBuffer = await sharp(whiteBackground)
       .composite([
         {
-          input: shadow1,
-          top: shadow1Top,
-          left: shadow1Left,
-          blend: 'over'
-        },
-        {
-          input: shadow2,
-          top: shadow2Top,
-          left: shadow2Left,
+          input: shadow,
+          top: shadowTop,
+          left: shadowLeft,
           blend: 'over'
         },
         {
