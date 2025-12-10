@@ -114,7 +114,6 @@ export async function POST(
 
     const instances = [instanceValue];
     const parameter = helpers.toValue({
-      editMode: 'EDIT_MODE_OUTPAINT',
       sampleCount: 1,
       addWatermark: false,
       outputMimeType: 'image/png',
