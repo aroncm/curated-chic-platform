@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
-import { experimental_generateImage as generateImage } from 'ai';
-import { google } from '@ai-sdk/google';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60 seconds for image processing
@@ -88,34 +86,59 @@ export async function POST(
     // Create imagen prompt with professional product photography instructions
     const imagenPrompt = `Product photography on pure white background with professional studio lighting and soft shadow beneath the object. Remove any existing background and replace with seamless white (#FFFFFF). Add realistic drop shadow for depth. High quality, professional e-commerce product image suitable for eBay, Etsy, and marketplace listings.`;
 
-    console.log('Calling Vercel AI Gateway for Imagen 4.0...');
+    console.log('Calling Vercel AI Gateway for Imagen 4.0 via direct API...');
 
-    // Configure Google provider with Vercel AI Gateway
-    // Set the GOOGLE_GENERATIVE_AI_API_KEY for the provider
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY = process.env.GOOGLE_AI_API_KEY;
-
-    // Generate image using Vercel AI SDK with Google Imagen
-    const { image: generatedImage } = await generateImage({
-      model: google.image('imagen-4.0-fast-generate-001'),
-      prompt: imagenPrompt,
-      providerOptions: {
-        google: {
-          // Pass the reference image
-          referenceImages: [
-            {
-              mimeType: 'image/png',
-              data: base64Image,
-            },
-          ],
+    // Call Vercel AI Gateway directly
+    // Using the gateway.ai.vercel.com endpoint with Imagen model
+    const gatewayResponse = await fetch(
+      'https://gateway.ai.vercel.com/v1/generate',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.VERCEL_API_TOKEN}`,
         },
-      },
-    });
+        body: JSON.stringify({
+          model: 'google/imagen-4.0-fast-generate-001',
+          prompt: imagenPrompt,
+          image: base64Image,
+          parameters: {
+            aspectRatio: '1:1',
+            sampleCount: 1,
+          },
+        }),
+      }
+    );
 
-    // Convert generated image to buffer
-    // The generated image has base64 or uint8Array property
-    const editedBuffer = generatedImage.uint8Array
-      ? Buffer.from(generatedImage.uint8Array)
-      : Buffer.from(generatedImage.base64 || '', 'base64');
+    if (!gatewayResponse.ok) {
+      const errorText = await gatewayResponse.text();
+      console.error('Vercel AI Gateway error:', errorText);
+      throw new Error(`Vercel AI Gateway request failed: ${gatewayResponse.status} - ${errorText}`);
+    }
+
+    const result = await gatewayResponse.json();
+    console.log('Gateway response received:', JSON.stringify(result).substring(0, 200));
+
+    // Extract the generated image from response
+    // The response format might vary, so we'll handle different possible structures
+    let imageData: string | null = null;
+
+    if (result.image) {
+      imageData = result.image;
+    } else if (result.images && result.images[0]) {
+      imageData = result.images[0];
+    } else if (result.data) {
+      imageData = result.data;
+    } else if (result.predictions && result.predictions[0]) {
+      imageData = result.predictions[0].bytesBase64Encoded || result.predictions[0].image;
+    }
+
+    if (!imageData) {
+      console.error('Full response:', JSON.stringify(result));
+      throw new Error('No image data in Vercel AI Gateway response');
+    }
+
+    const editedBuffer = Buffer.from(imageData, 'base64');
     console.log(`Received edited image: ${editedBuffer.byteLength} bytes`);
 
     // Generate a unique filename for the edited image
