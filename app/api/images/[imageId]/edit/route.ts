@@ -80,6 +80,7 @@ export async function POST(
     }
     const imageBuffer = await imageResponse.arrayBuffer();
     const base64Image = Buffer.from(imageBuffer).toString('base64');
+    const mimeType = imageResponse.headers.get('content-type') || 'image/png';
     console.log(`Original image fetched: ${base64Image.length} bytes (base64)`);
 
     // Initialize Vertex AI client with service account credentials
@@ -106,6 +107,14 @@ export async function POST(
       // Pass raw bytes for the source image; Vertex will handle background masking.
       image: {
         bytesBase64Encoded: base64Image,
+        mimeType,
+      },
+      // Provide a mask image so the service doesn't complain about missing mask bytes.
+      mask: {
+        image: {
+          bytesBase64Encoded: base64Image,
+          mimeType,
+        },
       },
     });
 
@@ -113,8 +122,6 @@ export async function POST(
     const parameter = helpers.toValue({
       editMode: 'EDIT_MODE_OUTPAINT',
       maskMode: 'MASK_MODE_BACKGROUND',
-      baseSteps: 35,
-      guidanceScale: 75,
       sampleCount: 1,
       addWatermark: false,
       outputMimeType: 'image/png',
@@ -204,12 +211,12 @@ export async function POST(
       prompt: prompt,
     });
   } catch (e: any) {
-    console.error('Image editing failed', e);
+    console.error('Image editing failed', e?.details || e?.message || e);
 
     return NextResponse.json(
       {
         error: 'Image editing failed',
-        details: e.message,
+        details: e?.details || e?.message || 'Unknown error',
       },
       { status: 500 }
     );
