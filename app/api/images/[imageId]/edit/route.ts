@@ -96,8 +96,9 @@ export async function POST(
     const location = 'us-central1';
     const endpoint = `projects/${projectId}/locations/${location}/publishers/google/models/imagegeneration@006`;
 
-    // Edit prompt for professional product photography
-    const editPrompt = 'Professional product photography on pure white background with studio lighting and soft drop shadow';
+    // Edit prompt for professional product photography; explicitly preserve the product
+    const editPrompt =
+      'Professional product photo on pure white studio background with soft shadow. Keep the product identical (shape, color, texture), only remove/replace the background.';
 
     console.log('Calling Google Vertex AI Imagen for image editing...');
 
@@ -109,19 +110,11 @@ export async function POST(
         bytesBase64Encoded: base64Image,
         mimeType,
       },
-      // Provide a mask image so the service doesn't complain about missing mask bytes.
-      mask: {
-        image: {
-          bytesBase64Encoded: base64Image,
-          mimeType,
-        },
-      },
     });
 
     const instances = [instanceValue];
     const parameter = helpers.toValue({
       editMode: 'EDIT_MODE_OUTPAINT',
-      maskMode: 'MASK_MODE_BACKGROUND',
       sampleCount: 1,
       addWatermark: false,
       outputMimeType: 'image/png',
