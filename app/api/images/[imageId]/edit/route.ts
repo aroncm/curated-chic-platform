@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import { PredictionServiceClient, helpers } from '@google-cloud/aiplatform';
+import sharp from 'sharp';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60 seconds for image processing
@@ -78,10 +79,26 @@ export async function POST(
     if (!imageResponse.ok) {
       throw new Error(`Failed to fetch original image: ${imageResponse.statusText}`);
     }
-    const imageBuffer = await imageResponse.arrayBuffer();
-    const base64Image = Buffer.from(imageBuffer).toString('base64');
+    const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+    const base64Image = imageBuffer.toString('base64');
     const mimeType = imageResponse.headers.get('content-type') || 'image/png';
     console.log(`Original image fetched: ${base64Image.length} bytes (base64)`);
+
+    // Build a simple foreground mask so Imagen only edits the background.
+    // This uses a quick grayscale + median filter + threshold; not perfect, but guides the model.
+    let maskBase64: string | null = null;
+    try {
+      const maskBuffer = await sharp(imageBuffer)
+        .greyscale()
+        .median(3)
+        .threshold(180) // tweak threshold if needed for darker backgrounds
+        .png()
+        .toBuffer();
+      maskBase64 = maskBuffer.toString('base64');
+      console.log(`Mask generated: ${maskBuffer.byteLength} bytes`);
+    } catch (maskErr) {
+      console.warn('Mask generation failed, proceeding without mask hint', maskErr);
+    }
 
     // Initialize Vertex AI client with service account credentials
     const client = new PredictionServiceClient({
@@ -110,13 +127,16 @@ export async function POST(
         bytesBase64Encoded: base64Image,
         mimeType,
       },
-      // Provide a mask image so the API stops demanding mask bytes; using the same image lets Imagen derive background.
-      mask: {
-        image: {
-          bytesBase64Encoded: base64Image,
-          mimeType,
-        },
-      },
+      ...(maskBase64
+        ? {
+            mask: {
+              image: {
+                bytesBase64Encoded: maskBase64,
+                mimeType: 'image/png',
+              },
+            },
+          }
+        : {}),
     });
 
     const instances = [instanceValue];
