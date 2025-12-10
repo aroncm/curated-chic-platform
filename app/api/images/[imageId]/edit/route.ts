@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
-import { PredictionServiceClient, helpers } from '@google-cloud/aiplatform';
+import sharp from 'sharp';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60 seconds for image processing
 export const runtime = 'nodejs'; // Force Node.js runtime
 
-// Google Vertex AI Imagen pricing: ~$0.02 per image
+// remove.bg pricing: ~$0.02 per image on paid tier (free tier limited)
 const IMAGEN_COST_PER_IMAGE = 0.02;
 
 async function logUsage(
@@ -18,7 +18,7 @@ async function logUsage(
     item_id: null,
     listing_id: null,
     endpoint: 'image_edit',
-    model: 'imagen-4.0-fast-generate',
+    model: 'remove.bg-white-bg',
     prompt_tokens: null,
     completion_tokens: null,
     total_cost_usd: IMAGEN_COST_PER_IMAGE,
@@ -29,10 +29,10 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ imageId: string }> }
 ) {
-  // Check for Google Cloud service account credentials
-  if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY) {
+  // Check for remove.bg API key
+  if (!process.env.REMOVEBG_API_KEY) {
     return NextResponse.json(
-      { error: 'Google Cloud service account credentials not configured on server.' },
+      { error: 'Remove.bg API key not configured on server.' },
       { status: 500 }
     );
   }
@@ -70,88 +70,37 @@ export async function POST(
   const originalImageUrl = image.url;
 
   try {
-    console.log(`Processing image with Google Vertex AI (Imagen 4.0): ${originalImageUrl}`);
+    console.log(`Processing image with remove.bg -> white background: ${originalImageUrl}`);
 
-    // Fetch the original image as base64
-    console.log('Fetching original image...');
-    const imageResponse = await fetch(originalImageUrl);
-    if (!imageResponse.ok) {
-      throw new Error(`Failed to fetch original image: ${imageResponse.statusText}`);
-    }
-    const imageBuffer = await imageResponse.arrayBuffer();
-    const base64Image = Buffer.from(imageBuffer).toString('base64');
-    const mimeType = imageResponse.headers.get('content-type') || 'image/png';
-    console.log(`Original image fetched: ${base64Image.length} bytes (base64)`);
-
-    // Initialize Vertex AI client with service account credentials
-    const client = new PredictionServiceClient({
-      apiEndpoint: 'us-central1-aiplatform.googleapis.com',
-      credentials: {
-        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        private_key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    // Step 1: remove background using remove.bg
+    const removeBgResponse = await fetch('https://api.remove.bg/v1.0/removebg', {
+      method: 'POST',
+      headers: {
+        'X-Api-Key': process.env.REMOVEBG_API_KEY,
       },
+      body: new URLSearchParams({
+        image_url: originalImageUrl,
+        size: 'auto',
+        crop: 'false',
+        format: 'png',
+      }),
     });
 
-    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || 'curated-chic-platform';
-    const location = 'us-central1';
-    const endpoint = `projects/${projectId}/locations/${location}/publishers/google/models/imagegeneration@006`;
-
-    // Edit prompt for professional product photography
-    const editPrompt = 'Professional product photography on pure white background with studio lighting and soft drop shadow';
-
-    console.log('Calling Google Vertex AI Imagen for image editing...');
-
-    // Construct the prediction request with correct Imagen edit API format
-    const instanceValue = helpers.toValue({
-      prompt: editPrompt,
-      // Pass raw bytes for the source image; Vertex will handle background masking.
-      image: {
-        bytesBase64Encoded: base64Image,
-        mimeType,
-      },
-      // Provide a mask image so the service doesn't complain about missing mask bytes.
-      mask: {
-        image: {
-          bytesBase64Encoded: base64Image,
-          mimeType,
-        },
-      },
-    });
-
-    const instances = [instanceValue];
-    const parameter = helpers.toValue({
-      editMode: 'EDIT_MODE_OUTPAINT',
-      maskMode: 'MASK_MODE_BACKGROUND',
-      sampleCount: 1,
-      addWatermark: false,
-      outputMimeType: 'image/png',
-    });
-
-    const request = {
-      endpoint,
-      instances: instances as any,
-      parameters: parameter as any,
-    };
-
-    const response = await client.predict(request);
-    console.log('Received response from Vertex AI');
-
-    const predictions = response[0].predictions;
-    if (!predictions || predictions.length === 0) {
-      throw new Error('No predictions returned from Vertex AI');
+    if (!removeBgResponse.ok) {
+      const errorText = await removeBgResponse.text();
+      throw new Error(`remove.bg failed: ${removeBgResponse.status} ${removeBgResponse.statusText} - ${errorText}`);
     }
 
-    // Extract the edited image from response
-    const prediction = predictions[0] as any;
-    const editedBase64 = prediction?.bytesBase64Encoded || prediction?.structValue?.fields?.bytesBase64Encoded?.stringValue;
+    const transparentBuffer = Buffer.from(await removeBgResponse.arrayBuffer());
+    console.log(`remove.bg returned ${transparentBuffer.byteLength} bytes`);
 
-    if (!editedBase64 || typeof editedBase64 !== 'string') {
-      console.error('Prediction response structure:', JSON.stringify(prediction, null, 2));
-      throw new Error('No image data in prediction response');
-    }
+    // Step 2: flatten onto a pure white background to avoid transparency artifacts
+    const editedBuffer = await sharp(transparentBuffer)
+      .flatten({ background: { r: 255, g: 255, b: 255 } })
+      .png()
+      .toBuffer();
 
-    const editedBuffer = Buffer.from(editedBase64, 'base64');
-    console.log(`Received edited image: ${editedBuffer.byteLength} bytes`);
+    console.log(`Final edited image size: ${editedBuffer.byteLength} bytes`);
 
     // Generate a unique filename for the edited image
     const timestamp = Date.now();
