@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
-import { experimental_generateImage as generateImage } from 'ai';
+import { PredictionServiceClient } from '@google-cloud/aiplatform';
+import { helpers } from '@google-cloud/aiplatform';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60 seconds for image processing
 export const runtime = 'nodejs'; // Force Node.js runtime
 
-// Vercel AI Gateway - Imagen pricing: ~$0.02 per image
+// Google Vertex AI Imagen pricing: ~$0.02 per image
 const IMAGEN_COST_PER_IMAGE = 0.02;
 
 async function logUsage(
@@ -29,11 +30,11 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ imageId: string }> }
 ) {
-  // Check for AI Gateway API key (use VERCEL_API_TOKEN as the gateway key)
-  const gatewayApiKey = process.env.VERCEL_API_TOKEN;
-  if (!gatewayApiKey) {
+  // Check for Google AI API key
+  const googleApiKey = process.env.GOOGLE_AI_API_KEY;
+  if (!googleApiKey) {
     return NextResponse.json(
-      { error: 'Vercel API token not configured on server.' },
+      { error: 'Google AI API key not configured on server.' },
       { status: 500 }
     );
   }
@@ -71,26 +72,84 @@ export async function POST(
   const originalImageUrl = image.url;
 
   try {
-    console.log(`Processing image with Vercel AI Gateway (Imagen 4.0): ${originalImageUrl}`);
+    console.log(`Processing image with Google Vertex AI (Imagen 4.0): ${originalImageUrl}`);
 
-    // Set AI Gateway API key for AI SDK
-    process.env.AI_GATEWAY_API_KEY = gatewayApiKey;
+    // Fetch the original image as base64
+    console.log('Fetching original image...');
+    const imageResponse = await fetch(originalImageUrl);
+    if (!imageResponse.ok) {
+      throw new Error(`Failed to fetch original image: ${imageResponse.statusText}`);
+    }
+    const imageBuffer = await imageResponse.arrayBuffer();
+    const base64Image = Buffer.from(imageBuffer).toString('base64');
+    console.log(`Original image fetched: ${base64Image.length} bytes (base64)`);
 
-    // Create imagen prompt with professional product photography instructions
-    const imagenPrompt = `Product photography on pure white background with professional studio lighting and soft shadow beneath the object. Remove any existing background and replace with seamless white (#FFFFFF). Add realistic drop shadow for depth. High quality, professional e-commerce product image suitable for eBay, Etsy, and marketplace listings.`;
-
-    console.log('Calling Vercel AI Gateway for Imagen 4.0 via AI SDK...');
-
-    // Use AI SDK with correct Imagen model name
-    const { image: generatedImage } = await generateImage({
-      model: 'imagen-4.0-fast-generate-001',
-      prompt: imagenPrompt,
+    // Initialize Vertex AI client with service account credentials
+    const client = new PredictionServiceClient({
+      apiEndpoint: 'us-central1-aiplatform.googleapis.com',
+      credentials: {
+        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        private_key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      },
     });
 
-    // Convert generated image to buffer
-    const editedBuffer = generatedImage.uint8Array
-      ? Buffer.from(generatedImage.uint8Array)
-      : Buffer.from(generatedImage.base64 || '', 'base64');
+    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || 'curated-chic-platform';
+    const location = 'us-central1';
+    const endpoint = `projects/${projectId}/locations/${location}/publishers/google/models/imagegeneration@006`;
+
+    // Edit prompt for professional product photography
+    const editPrompt = 'Professional product photography on pure white background with studio lighting and soft drop shadow';
+
+    console.log('Calling Google Vertex AI Imagen for image editing...');
+
+    // Construct the prediction request with correct Imagen edit API format
+    const instanceValue = helpers.toValue({
+      prompt: editPrompt,
+      referenceImages: [
+        {
+          referenceType: 'REFERENCE_TYPE_RAW',
+          referenceId: 1,
+          referenceImage: {
+            bytesBase64Encoded: base64Image,
+          },
+        },
+      ],
+    });
+
+    const instances = [instanceValue];
+    const parameter = helpers.toValue({
+      editMode: 'EDIT_MODE_OUTPAINT',
+      maskMode: 'MASK_MODE_BACKGROUND',
+      baseSteps: 35,
+      guidanceScale: 75,
+      sampleCount: 1,
+      addWatermark: false,
+    });
+
+    const request = {
+      endpoint,
+      instances: instances as any,
+      parameters: parameter as any,
+    };
+
+    const response = await client.predict(request);
+    console.log('Received response from Vertex AI');
+
+    const predictions = response[0].predictions;
+    if (!predictions || predictions.length === 0) {
+      throw new Error('No predictions returned from Vertex AI');
+    }
+
+    // Extract the edited image from response
+    const prediction = predictions[0] as any;
+    const editedBase64 = prediction?.bytesBase64Encoded || prediction?.structValue?.fields?.bytesBase64Encoded?.stringValue;
+
+    if (!editedBase64 || typeof editedBase64 !== 'string') {
+      console.error('Prediction response structure:', JSON.stringify(prediction, null, 2));
+      throw new Error('No image data in prediction response');
+    }
+
+    const editedBuffer = Buffer.from(editedBase64, 'base64');
     console.log(`Received edited image: ${editedBuffer.byteLength} bytes`);
 
     // Generate a unique filename for the edited image
