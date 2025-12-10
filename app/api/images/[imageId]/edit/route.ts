@@ -78,7 +78,7 @@ export async function POST(
     // Initialize Vertex AI
     const vertexAI = new VertexAI({
       project: projectId,
-      location: 'us-east1', // Using region where you have quota
+      location: 'us-central1', // Using most common Vertex AI region
       googleAuthOptions: {
         credentials: credentials,
       },
