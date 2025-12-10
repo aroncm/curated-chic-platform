@@ -186,7 +186,7 @@ export function EditImageButton({
                       studio lighting, and realistic shadows (perfect for eBay, Etsy, Facebook Marketplace)
                     </p>
                     <p className="text-xs text-slate-500">
-                      Powered by Google Generative AI (Imagen 3.0) - ~$0.02/image
+                      Powered by Vercel AI Gateway (Imagen 4.0) - ~$0.02/image
                     </p>
                   </div>
 
