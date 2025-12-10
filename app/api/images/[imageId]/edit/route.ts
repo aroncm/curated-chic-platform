@@ -110,10 +110,19 @@ export async function POST(
         bytesBase64Encoded: base64Image,
         mimeType,
       },
+      // Provide a mask image so the API stops demanding mask bytes; using the same image lets Imagen derive background.
+      mask: {
+        image: {
+          bytesBase64Encoded: base64Image,
+          mimeType,
+        },
+      },
     });
 
     const instances = [instanceValue];
     const parameter = helpers.toValue({
+      editMode: 'EDIT_MODE_INPAINT',
+      maskMode: 'MASK_MODE_BACKGROUND',
       sampleCount: 1,
       addWatermark: false,
       outputMimeType: 'image/png',
