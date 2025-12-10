@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
-import { PredictionServiceClient } from '@google-cloud/aiplatform';
-import { helpers } from '@google-cloud/aiplatform';
+import { PredictionServiceClient, helpers } from '@google-cloud/aiplatform';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60 seconds for image processing
@@ -104,15 +103,10 @@ export async function POST(
     // Construct the prediction request with correct Imagen edit API format
     const instanceValue = helpers.toValue({
       prompt: editPrompt,
-      referenceImages: [
-        {
-          referenceType: 'REFERENCE_TYPE_RAW',
-          referenceId: 1,
-          referenceImage: {
-            bytesBase64Encoded: base64Image,
-          },
-        },
-      ],
+      // Pass raw bytes for the source image; Vertex will handle background masking.
+      image: {
+        bytesBase64Encoded: base64Image,
+      },
     });
 
     const instances = [instanceValue];
@@ -123,6 +117,7 @@ export async function POST(
       guidanceScale: 75,
       sampleCount: 1,
       addWatermark: false,
+      outputMimeType: 'image/png',
     });
 
     const request = {
