@@ -30,11 +30,10 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ imageId: string }> }
 ) {
-  // Check for Google AI API key
-  const googleApiKey = process.env.GOOGLE_AI_API_KEY;
-  if (!googleApiKey) {
+  // Check for Google Cloud service account credentials
+  if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY) {
     return NextResponse.json(
-      { error: 'Google AI API key not configured on server.' },
+      { error: 'Google Cloud service account credentials not configured on server.' },
       { status: 500 }
     );
   }
