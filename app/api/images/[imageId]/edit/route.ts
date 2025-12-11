@@ -84,20 +84,36 @@ export async function POST(
     const mimeType = imageResponse.headers.get('content-type') || 'image/png';
     console.log(`Original image fetched: ${base64Image.length} bytes (base64)`);
 
-    // Build a simple foreground mask so Imagen only edits the background.
-    // This uses a quick grayscale + median filter + threshold; not perfect, but guides the model.
+    // Build a high-quality mask using remove.bg to preserve the product pixels.
     let maskBase64: string | null = null;
     try {
-      const maskBuffer = await sharp(imageBuffer)
-        .greyscale()
-        .median(3)
-        .threshold(180) // tweak threshold if needed for darker backgrounds
-        .png()
-        .toBuffer();
-      maskBase64 = maskBuffer.toString('base64');
-      console.log(`Mask generated: ${maskBuffer.byteLength} bytes`);
+      if (!process.env.REMOVEBG_API_KEY) {
+        throw new Error('REMOVEBG_API_KEY not set');
+      }
+
+      const removeBgResponse = await fetch('https://api.remove.bg/v1.0/removebg', {
+        method: 'POST',
+        headers: {
+          'X-Api-Key': process.env.REMOVEBG_API_KEY,
+        },
+        body: new URLSearchParams({
+          image_url: originalImageUrl,
+          size: 'auto',
+          format: 'png', // keeps alpha
+        }),
+      });
+
+      if (!removeBgResponse.ok) {
+        const errorText = await removeBgResponse.text();
+        throw new Error(`remove.bg failed: ${removeBgResponse.status} ${removeBgResponse.statusText} - ${errorText}`);
+      }
+
+      const rgbaBuffer = Buffer.from(await removeBgResponse.arrayBuffer());
+      const alphaMask = await sharp(rgbaBuffer).extractChannel('alpha').png().toBuffer();
+      maskBase64 = alphaMask.toString('base64');
+      console.log(`Mask generated via remove.bg: ${alphaMask.byteLength} bytes`);
     } catch (maskErr) {
-      console.warn('Mask generation failed, proceeding without mask hint', maskErr);
+      console.warn('Mask generation failed, falling back to no mask', maskErr);
     }
 
     // Initialize Vertex AI client with service account credentials
