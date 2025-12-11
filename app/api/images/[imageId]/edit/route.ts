@@ -82,6 +82,7 @@ export async function POST(
     const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
     const base64Image = imageBuffer.toString('base64');
     const mimeType = imageResponse.headers.get('content-type') || 'image/png';
+    const { width: origWidth, height: origHeight } = await sharp(imageBuffer).metadata();
     console.log(`Original image fetched: ${base64Image.length} bytes (base64)`);
 
     // Build a high-quality mask using remove.bg to preserve the product pixels.
@@ -109,9 +110,19 @@ export async function POST(
       }
 
       const rgbaBuffer = Buffer.from(await removeBgResponse.arrayBuffer());
-      const alphaMask = await sharp(rgbaBuffer).extractChannel('alpha').png().toBuffer();
+      let alphaMask = await sharp(rgbaBuffer).extractChannel('alpha').toBuffer();
+      if (origWidth && origHeight) {
+        alphaMask = await sharp(alphaMask)
+          .resize(origWidth, origHeight, { fit: 'fill', kernel: 'nearest' })
+          .png()
+          .toBuffer();
+      } else {
+        alphaMask = await sharp(alphaMask).png().toBuffer();
+      }
       maskBase64 = alphaMask.toString('base64');
-      console.log(`Mask generated via remove.bg: ${alphaMask.byteLength} bytes`);
+      console.log(
+        `Mask generated via remove.bg: ${alphaMask.byteLength} bytes (resized to ${origWidth}x${origHeight})`
+      );
     } catch (maskErr) {
       console.warn('Mask generation failed, falling back to no mask', maskErr);
     }
