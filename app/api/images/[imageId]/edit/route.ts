@@ -110,14 +110,17 @@ export async function POST(
       }
 
       const rgbaBuffer = Buffer.from(await removeBgResponse.arrayBuffer());
+      // Extract alpha (foreground), resize to match source, binarize, then invert so background = editable area.
       let alphaMask = await sharp(rgbaBuffer).extractChannel('alpha').toBuffer();
       if (origWidth && origHeight) {
         alphaMask = await sharp(alphaMask)
           .resize(origWidth, origHeight, { fit: 'fill', kernel: 'nearest' })
+          .threshold(1) // binarize: any non-zero alpha -> 255
+          .negate() // invert so background is white (editable), foreground black (preserve)
           .png()
           .toBuffer();
       } else {
-        alphaMask = await sharp(alphaMask).png().toBuffer();
+        alphaMask = await sharp(alphaMask).threshold(1).negate().png().toBuffer();
       }
       maskBase64 = alphaMask.toString('base64');
       console.log(
