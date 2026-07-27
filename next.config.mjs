@@ -10,14 +10,6 @@ const nextConfig = {
   },
   // Use standalone output for serverless deployment
   output: 'standalone',
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**.supabase.co',
-      },
-    ],
-  },
 };
 
 export default nextConfig;

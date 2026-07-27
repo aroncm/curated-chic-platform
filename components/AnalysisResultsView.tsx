@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { EditImageButton } from './EditImageButton';
 
 type AnalysisData = {
   category: string;
@@ -23,7 +22,6 @@ type AnalysisData = {
 type ItemImage = {
   id: string;
   url: string;
-  edited_url?: string | null;
 };
 
 type AnalysisResultsViewProps = {
@@ -52,6 +50,7 @@ export function AnalysisResultsView({
   const [condition, setCondition] = useState(analysis.condition_summary);
   const [inventoryLocation, setInventoryLocation] = useState('');
   const [cost, setCost] = useState(costBasis?.toString() || '');
+  const [listingPrice, setListingPrice] = useState(analysis.suggested_list_price.toString());
   const [salesPrice, setSalesPrice] = useState('');
   const [salesFees, setSalesFees] = useState('');
   const [saving, setSaving] = useState(false);
@@ -129,36 +128,34 @@ export function AnalysisResultsView({
 
     setSaving(true);
     try {
-      const payload = {
-        title: itemName.trim(),
-        category: category.trim(),
-        condition_summary: condition.trim(),
-        cost: cost ? Number(cost) : null,
-        sales_price: salesPrice ? Number(salesPrice) : null,
-      };
-
-      console.log('Saving item with payload:', payload);
-
       const response = await fetch(`/api/items/${itemId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          title: itemName.trim(),
+          category: category.trim(),
+          condition_summary: condition.trim(),
+          // Add other fields as needed
+        }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('Server error:', errorData);
-        throw new Error(errorData.error || 'Failed to save item');
+        throw new Error('Failed to save item');
       }
 
       router.refresh();
       alert('Item saved successfully!');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error saving item:', err);
-      alert(`Failed to save item: ${err.message}`);
+      alert('Failed to save item');
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleContinueToListing = async () => {
+    await handleSaveItem();
+    router.push(`/items/${itemId}/listing-management`);
   };
 
   const potentialProfit = costBasis
@@ -173,54 +170,15 @@ export function AnalysisResultsView({
         {/* Images */}
         {images.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-sm font-semibold mb-3">Product Images</h3>
-            <div className="flex gap-4 overflow-x-auto pb-2">
+            <div className="flex gap-4 overflow-x-auto">
               {images.map((img: ItemImage) => (
-                <div key={img.id} className="flex-shrink-0">
-                  <div className="relative w-40 h-40 mb-2">
-                    <Image
-                      src={img.edited_url || img.url}
-                      alt="Item"
-                      fill
-                      className="object-cover rounded border border-slate-200"
-                    />
-                    {img.edited_url && (
-                      <div className="absolute top-1 left-1 bg-purple-600 text-white text-xs px-2 py-0.5 rounded">
-                        Edited
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <EditImageButton
-                      imageId={img.id}
-                      originalUrl={img.url}
-                      editedUrl={img.edited_url}
-                      itemTitle={currentTitle}
-                    />
-                    {img.edited_url && (
-                      <a
-                        href={img.edited_url}
-                        download={`${currentTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_edited_${Date.now()}.png`}
-                        className="text-xs bg-emerald-600 text-white px-2 py-1 rounded hover:bg-emerald-700 transition-colors flex items-center gap-1"
-                        title="Download edited image"
-                      >
-                        <svg
-                          className="w-3 h-3"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                          />
-                        </svg>
-                        Download
-                      </a>
-                    )}
-                  </div>
+                <div key={img.id} className="relative w-40 h-40 flex-shrink-0">
+                  <Image
+                    src={img.url}
+                    alt="Item"
+                    fill
+                    className="object-cover rounded"
+                  />
                 </div>
               ))}
             </div>
@@ -430,28 +388,31 @@ export function AnalysisResultsView({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Cost
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2 text-slate-500">$</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={cost}
-                  onChange={(e) => setCost(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full pl-6 pr-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
+              <input
+                type="number"
+                step="0.01"
+                value={cost}
+                onChange={(e) => setCost(e.target.value)}
+                placeholder="0.00"
+                className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
             </div>
 
-            {/* Suggested Listing Price */}
+            {/* Listing Price */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Suggested Listing Price
+                Listing Price
               </label>
-              <div className="w-full px-3 py-2 border border-slate-300 rounded text-sm bg-slate-50 text-slate-700">
-                ${analysis.suggested_list_price.toFixed(2)}
-              </div>
-              <p className="text-xs text-slate-500 mt-1">From AI analysis</p>
+              <input
+                type="number"
+                step="0.01"
+                value={listingPrice}
+                onChange={(e) => setListingPrice(e.target.value)}
+                placeholder="0.00"
+                className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
+                disabled
+              />
+              <p className="text-xs text-slate-500 mt-1">Will be set when listing</p>
             </div>
 
             {/* Sales Price */}
@@ -459,18 +420,15 @@ export function AnalysisResultsView({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Sales Price
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2 text-slate-400">$</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={salesPrice}
-                  onChange={(e) => setSalesPrice(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full pl-6 pr-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
-                  disabled
-                />
-              </div>
+              <input
+                type="number"
+                step="0.01"
+                value={salesPrice}
+                onChange={(e) => setSalesPrice(e.target.value)}
+                placeholder="0.00"
+                className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
+                disabled
+              />
               <p className="text-xs text-slate-500 mt-1">Will be set when sold</p>
             </div>
 
@@ -479,36 +437,27 @@ export function AnalysisResultsView({
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Sales Fees
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2 text-slate-400">$</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={salesFees}
-                  onChange={(e) => setSalesFees(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full pl-6 pr-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
-                  disabled
-                />
-              </div>
+              <input
+                type="number"
+                step="0.01"
+                value={salesFees}
+                onChange={(e) => setSalesFees(e.target.value)}
+                placeholder="0.00"
+                className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
+                disabled
+              />
               <p className="text-xs text-slate-500 mt-1">Will be calculated when sold</p>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="pt-4 flex gap-4">
+          {/* Save and Continue Button */}
+          <div className="pt-4">
             <button
-              onClick={handleSaveItem}
+              onClick={handleContinueToListing}
               disabled={saving}
-              className="flex-1 bg-slate-600 text-white px-6 py-4 rounded-lg text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700 transition-colors"
+              className="w-full bg-emerald-600 text-white px-6 py-4 rounded-lg text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-700 transition-colors"
             >
-              {saving ? 'Saving...' : 'Save Item'}
-            </button>
-            <button
-              onClick={() => router.push(`/items/${itemId}/listing-management`)}
-              className="flex-1 bg-emerald-600 text-white px-6 py-4 rounded-lg text-base font-semibold hover:bg-emerald-700 transition-colors"
-            >
-              Continue to Listing Management
+              {saving ? 'Saving...' : 'Save Item and Continue to Listing Management'}
             </button>
           </div>
         </div>

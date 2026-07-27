@@ -1,6 +1,5 @@
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import Link from 'next/link';
-import { Breadcrumb } from '@/components/Breadcrumb';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,20 +72,6 @@ export default async function ReportingPage({
     );
   }
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'new':
-      case 'identified':
-        return 'Unlisted';
-      case 'listed':
-        return 'Listed';
-      case 'sold':
-        return 'Sold';
-      default:
-        return status;
-    }
-  };
-
   const rows = (items ?? []).map((item: any) => {
     const purchase = item.purchases?.[0];
     const listing = item.listings?.[0];
@@ -114,7 +99,6 @@ export default async function ReportingPage({
       id: item.id,
       title: item.title,
       status: item.status,
-      statusLabel: getStatusLabel(item.status),
       category: item.category,
       platform: platformName,
       purchase_price: purchase?.purchase_price
@@ -124,9 +108,6 @@ export default async function ReportingPage({
         ? Number(purchase.additional_costs)
         : null,
       cost_basis: costBasis,
-      suggested_price: item.suggested_list_price
-        ? Number(item.suggested_list_price)
-        : null,
       listing_price: listing?.listing_price
         ? Number(listing.listing_price)
         : null,
@@ -179,13 +160,6 @@ export default async function ReportingPage({
 
   return (
     <main className="space-y-6">
-      <Breadcrumb
-        items={[
-          { label: 'Home', href: '/items' },
-          { label: 'Reporting' },
-        ]}
-      />
-
       <div className="flex items-center justify-between gap-2">
         <div>
           <h2 className="text-xl font-semibold">Reporting</h2>
@@ -285,7 +259,6 @@ export default async function ReportingPage({
               <th className="text-left px-3 py-2">Category</th>
               <th className="text-left px-3 py-2">Platform</th>
               <th className="text-right px-3 py-2">Cost basis</th>
-              <th className="text-right px-3 py-2">Suggested</th>
               <th className="text-right px-3 py-2">List price</th>
               <th className="text-left px-3 py-2">Date listed</th>
               <th className="text-right px-3 py-2">Sale price</th>
@@ -303,7 +276,7 @@ export default async function ReportingPage({
                     {row.title}
                   </Link>
                 </td>
-                <td className="px-3 py-2">{row.statusLabel}</td>
+                <td className="px-3 py-2 capitalize">{row.status}</td>
                 <td className="px-3 py-2">
                   {row.category || <span className="text-slate-400">—</span>}
                 </td>
@@ -313,11 +286,6 @@ export default async function ReportingPage({
                 <td className="px-3 py-2 text-right">
                   {row.cost_basis != null
                     ? `$${row.cost_basis.toFixed(2)}`
-                    : '—'}
-                </td>
-                <td className="px-3 py-2 text-right">
-                  {row.suggested_price != null
-                    ? `$${row.suggested_price.toFixed(2)}`
                     : '—'}
                 </td>
                 <td className="px-3 py-2 text-right">
@@ -347,7 +315,7 @@ export default async function ReportingPage({
             {rows.length === 0 && (
               <tr>
                 <td
-                  colSpan={10}
+                  colSpan={9}
                   className="px-3 py-4 text-xs text-slate-500"
                 >
                   No items found for this range.

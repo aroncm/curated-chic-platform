@@ -1,7 +1,6 @@
 import './globals.css';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { ProfileDropdown } from '@/components/ProfileDropdown';
 
 export const metadata = {
   title: 'VintageLab',
@@ -18,31 +17,22 @@ export default function RootLayout({
       <body className="bg-slate-100 text-slate-900">
         <div className="min-h-screen flex flex-col">
           <header className="border-b bg-white">
-            <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-              <div className="font-semibold text-lg">VintageLab</div>
-              <div className="flex items-center gap-6">
-                <nav className="flex gap-4 text-sm">
-                  <Link href="/items" className="hover:underline">
-                    Add Items
-                  </Link>
-                  <Link href="/inventory" className="hover:underline">
-                    Inventory
-                  </Link>
-                  <Link href="/listings" className="hover:underline">
-                    Listing
-                  </Link>
-                  <Link href="/inventory/metadata" className="hover:underline">
-                    Metadata
-                  </Link>
-                  <Link href="/reporting" className="hover:underline">
-                    Reporting
-                  </Link>
-                </nav>
-                <ProfileDropdown />
-              </div>
+            <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+              <div className="font-semibold text-sm">VintageLab</div>
+              <nav className="flex gap-4 text-xs">
+                <Link href="/items" className="hover:underline">
+                  Items
+                </Link>
+                <Link href="/reporting" className="hover:underline">
+                  Reporting
+                </Link>
+                <Link href="/inventory" className="hover:underline">
+                  Inventory Management
+                </Link>
+              </nav>
             </div>
           </header>
-          <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
+          <main className="flex-1 max-w-5xl mx-auto px-4 py-6">
             {children}
           </main>
         </div>

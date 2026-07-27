@@ -11,17 +11,9 @@ type ItemInventoryRow = {
   status: 'new' | 'identified' | 'listed' | 'sold';
   platform: string | null;
   cost: number | null;
-  suggested_price: number | null;
   listing_price: number | null;
   sales_price: number | null;
-  date_listed: string | null;
-  date_sold: string | null;
   thumbnail_url: string | null;
-  shipping_cost: number | null;
-  platform_fees: number | null;
-  other_fees: number | null;
-  total_fees: number | null;
-  import_source?: 'manual' | 'email';
 };
 
 type ItemsInventoryTableProps = {
@@ -33,22 +25,6 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Partial<ItemInventoryRow>>({});
   const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState<string | null>(null);
-
-  // Helper function to format currency for display
-  const formatCurrency = (value: number | null | undefined): string => {
-    if (value == null || value === 0) return '';
-    return value.toString();
-  };
-
-  // Helper function to parse currency input
-  const parseCurrency = (value: string): number | null => {
-    if (!value || value.trim() === '') return null;
-    // Remove any non-numeric characters except decimal point
-    const cleaned = value.replace(/[^\d.]/g, '');
-    const parsed = parseFloat(cleaned);
-    return isNaN(parsed) || parsed === 0 ? null : parsed;
-  };
 
   const handleEdit = (item: ItemInventoryRow) => {
     setEditingId(item.id);
@@ -58,11 +34,6 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
       cost: item.cost,
       listing_price: item.listing_price,
       sales_price: item.sales_price,
-      date_listed: item.date_listed,
-      date_sold: item.date_sold,
-      shipping_cost: item.shipping_cost,
-      platform_fees: item.platform_fees,
-      other_fees: item.other_fees,
     });
   };
 
@@ -95,36 +66,12 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
     }
   };
 
-  const handleDelete = async (itemId: string, itemTitle: string) => {
-    if (!confirm(`Are you sure you want to delete "${itemTitle}"? This action cannot be undone.`)) {
-      return;
-    }
-
-    setDeleting(itemId);
-    try {
-      const response = await fetch(`/api/items/${itemId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete item');
-      }
-
-      router.refresh();
-    } catch (err) {
-      console.error('Error deleting item:', err);
-      alert('Failed to delete item');
-    } finally {
-      setDeleting(null);
-    }
-  };
-
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'new':
-        return 'New';
+        return 'Unlisted';
       case 'identified':
-        return 'Identified';
+        return 'Unlisted';
       case 'listed':
         return 'Listed';
       case 'sold':
@@ -137,298 +84,242 @@ export function ItemsInventoryTable({ items }: ItemsInventoryTableProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'new':
-        return 'bg-amber-500 text-white';
       case 'identified':
-        return 'bg-slate-600 text-white';
+        return 'bg-slate-100 text-slate-700';
       case 'listed':
-        return 'bg-blue-600 text-white';
+        return 'bg-blue-100 text-blue-700';
       case 'sold':
-        return 'bg-green-600 text-white';
+        return 'bg-green-100 text-green-700';
       default:
-        return 'bg-slate-600 text-white';
+        return 'bg-slate-100 text-slate-700';
     }
   };
 
   return (
-    <div className="space-y-4">
-      {items.length === 0 ? (
-        <div className="bg-white rounded shadow-sm p-8 text-center text-slate-500">
-          No items in inventory yet. Add items to get started.
-        </div>
-      ) : (
-        items.map((item) => {
-          const isEditing = editingId === item.id;
+    <div className="bg-white rounded shadow-sm overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-100 border-b">
+            <tr>
+              <th className="text-left px-4 py-3 font-semibold">Image</th>
+              <th className="text-left px-4 py-3 font-semibold">Item Name</th>
+              <th className="text-left px-4 py-3 font-semibold">Status</th>
+              <th className="text-left px-4 py-3 font-semibold">Platform</th>
+              <th className="text-left px-4 py-3 font-semibold">Cost</th>
+              <th className="text-left px-4 py-3 font-semibold">Listing Price</th>
+              <th className="text-left px-4 py-3 font-semibold">Sales Price</th>
+              <th className="text-left px-4 py-3 font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={8}
+                  className="px-4 py-8 text-center text-slate-500 text-sm"
+                >
+                  No items in inventory yet. Add items to get started.
+                </td>
+              </tr>
+            ) : (
+              items.map((item) => {
+                const isEditing = editingId === item.id;
 
-          return (
-            <div key={item.id} className="bg-white rounded shadow-sm p-3 hover:shadow-md transition-shadow">
-              <div className="flex gap-4">
-                {/* Image and Status */}
-                <div className="flex-shrink-0">
-                  {item.thumbnail_url ? (
-                    <div className="relative w-20 h-20">
-                      <Image
-                        src={item.thumbnail_url}
-                        alt={item.title}
-                        fill
-                        className="object-cover rounded"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-20 h-20 bg-slate-200 rounded flex items-center justify-center text-slate-400 text-xs">
-                      No img
-                    </div>
-                  )}
-                  {/* Status Badge Below Image */}
-                  <div className="mt-2 flex justify-center">
-                    {isEditing ? (
-                      <select
-                        value={editValues.status || item.status}
-                        onChange={(e) =>
-                          setEditValues({
-                            ...editValues,
-                            status: e.target.value as ItemInventoryRow['status'],
-                          })
-                        }
-                        className="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      >
-                        <option value="new">New</option>
-                        <option value="identified">Identified</option>
-                        <option value="listed">Listed</option>
-                        <option value="sold">Sold</option>
-                      </select>
-                    ) : (
-                      <span
-                        className={`px-2 py-1 rounded-md text-xs font-semibold ${getStatusColor(
-                          item.status
-                        )}`}
-                      >
-                        {getStatusLabel(item.status)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Main Content */}
-                <div className="flex-1 min-w-0">
-                  {/* Header Row: Title and Actions */}
-                  <div className="flex items-start justify-between gap-4 mb-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/items/${item.id}`}
-                          className="text-base font-semibold text-emerald-600 hover:text-emerald-700 hover:underline"
-                        >
-                          {item.title}
-                        </Link>
-                        {item.import_source === 'email' && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
-                            <svg className="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                            Email
-                          </span>
-                        )}
-                      </div>
-                      {!isEditing && item.platform && (
-                        <span className="text-xs text-slate-500 mt-0.5 block">{item.platform}</span>
+                return (
+                  <tr key={item.id} className="border-b hover:bg-slate-50">
+                    {/* Image */}
+                    <td className="px-4 py-3">
+                      {item.thumbnail_url ? (
+                        <div className="relative w-12 h-12">
+                          <Image
+                            src={item.thumbnail_url}
+                            alt={item.title}
+                            fill
+                            className="object-cover rounded"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 bg-slate-200 rounded flex items-center justify-center text-slate-400 text-xs">
+                          No img
+                        </div>
                       )}
-                    </div>
+                    </td>
+
+                    {/* Item Name */}
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/items/${item.id}`}
+                        className="text-emerald-600 hover:text-emerald-700 hover:underline font-medium"
+                      >
+                        {item.title}
+                      </Link>
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-4 py-3">
+                      {isEditing ? (
+                        <select
+                          value={editValues.status || item.status}
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              status: e.target.value as ItemInventoryRow['status'],
+                            })
+                          }
+                          className="px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        >
+                          <option value="new">Unlisted</option>
+                          <option value="identified">Unlisted</option>
+                          <option value="listed">Listed</option>
+                          <option value="sold">Sold</option>
+                        </select>
+                      ) : (
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(
+                            item.status
+                          )}`}
+                        >
+                          {getStatusLabel(item.status)}
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Platform */}
+                    <td className="px-4 py-3">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editValues.platform ?? item.platform ?? ''}
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              platform: e.target.value || null,
+                            })
+                          }
+                          placeholder="e.g., eBay"
+                          className="w-full px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      ) : (
+                        <span className="text-slate-700">
+                          {item.platform || '—'}
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Cost */}
+                    <td className="px-4 py-3">
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={editValues.cost ?? item.cost ?? ''}
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              cost: e.target.value ? Number(e.target.value) : null,
+                            })
+                          }
+                          placeholder="0.00"
+                          className="w-24 px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      ) : (
+                        <span className="text-slate-700">
+                          {item.cost != null ? `$${Number(item.cost).toFixed(2)}` : '—'}
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Listing Price */}
+                    <td className="px-4 py-3">
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={
+                            editValues.listing_price ?? item.listing_price ?? ''
+                          }
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              listing_price: e.target.value
+                                ? Number(e.target.value)
+                                : null,
+                            })
+                          }
+                          placeholder="0.00"
+                          className="w-24 px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      ) : (
+                        <span className="text-slate-700">
+                          {item.listing_price != null
+                            ? `$${Number(item.listing_price).toFixed(2)}`
+                            : '—'}
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Sales Price */}
+                    <td className="px-4 py-3">
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={editValues.sales_price ?? item.sales_price ?? ''}
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              sales_price: e.target.value
+                                ? Number(e.target.value)
+                                : null,
+                            })
+                          }
+                          placeholder="0.00"
+                          className="w-24 px-2 py-1 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      ) : (
+                        <span className="text-slate-700">
+                          {item.sales_price != null
+                            ? `$${Number(item.sales_price).toFixed(2)}`
+                            : '—'}
+                        </span>
+                      )}
+                    </td>
 
                     {/* Actions */}
-                    <div className="flex-shrink-0">
+                    <td className="px-4 py-3">
                       {isEditing ? (
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleSave(item.id)}
                             disabled={saving}
-                            className="px-3 py-1.5 bg-emerald-600 text-white rounded text-xs font-medium hover:bg-emerald-700 disabled:opacity-50"
+                            className="text-xs text-emerald-600 hover:text-emerald-700 font-medium disabled:opacity-50"
                           >
                             {saving ? 'Saving...' : 'Save'}
                           </button>
                           <button
                             onClick={handleCancel}
                             disabled={saving}
-                            className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded text-xs font-medium hover:bg-slate-300 disabled:opacity-50"
+                            className="text-xs text-slate-600 hover:text-slate-700 disabled:opacity-50"
                           >
                             Cancel
                           </button>
                         </div>
                       ) : (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEdit(item)}
-                            disabled={deleting === item.id}
-                            className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded text-xs font-medium hover:bg-slate-200 disabled:opacity-50"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(item.id, item.title)}
-                            disabled={deleting === item.id}
-                            className="px-3 py-1.5 bg-red-50 text-red-600 rounded text-xs font-medium hover:bg-red-100 disabled:opacity-50"
-                          >
-                            {deleting === item.id ? 'Del...' : 'Delete'}
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="text-xs text-slate-600 hover:text-emerald-600 font-medium"
+                        >
+                          Edit
+                        </button>
                       )}
-                    </div>
-                  </div>
-
-                  {/* Single Row of Fields - Always Editable */}
-                  <div className="grid grid-cols-7 gap-3 text-xs">
-                    {/* Platform */}
-                    <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">
-                        Platform
-                      </label>
-                      <input
-                        type="text"
-                        value={isEditing ? (editValues.platform ?? item.platform ?? '') : (item.platform ?? '')}
-                        onChange={(e) =>
-                          setEditValues({
-                            ...editValues,
-                            platform: e.target.value || null,
-                          })
-                        }
-                        placeholder="eBay"
-                        disabled={!isEditing}
-                        className="w-full px-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-700"
-                      />
-                    </div>
-
-                    {/* Cost */}
-                    <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">
-                        Cost
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={formatCurrency(isEditing ? (editValues.cost ?? item.cost) : item.cost)}
-                          onChange={(e) =>
-                            setEditValues({
-                              ...editValues,
-                              cost: parseCurrency(e.target.value),
-                            })
-                          }
-                          placeholder="0.00"
-                          disabled={!isEditing}
-                          className="w-full pl-5 pr-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-700"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Listing Price */}
-                    <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">
-                        List Price
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={formatCurrency(isEditing ? (editValues.listing_price ?? item.listing_price) : item.listing_price)}
-                          onChange={(e) =>
-                            setEditValues({
-                              ...editValues,
-                              listing_price: parseCurrency(e.target.value),
-                            })
-                          }
-                          placeholder="0.00"
-                          disabled={!isEditing}
-                          className="w-full pl-5 pr-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-700"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Date Listed */}
-                    <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">
-                        Date Listed
-                      </label>
-                      <input
-                        type="date"
-                        value={isEditing ? (editValues.date_listed ?? item.date_listed ?? '') : (item.date_listed ?? '')}
-                        onChange={(e) =>
-                          setEditValues({
-                            ...editValues,
-                            date_listed: e.target.value || null,
-                          })
-                        }
-                        disabled={!isEditing}
-                        className="w-full px-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-700"
-                      />
-                    </div>
-
-                    {/* Sales Price */}
-                    <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">
-                        Sale Price
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={formatCurrency(isEditing ? (editValues.sales_price ?? item.sales_price) : item.sales_price)}
-                          onChange={(e) =>
-                            setEditValues({
-                              ...editValues,
-                              sales_price: parseCurrency(e.target.value),
-                            })
-                          }
-                          placeholder="0.00"
-                          disabled={!isEditing}
-                          className="w-full pl-5 pr-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-700"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Fees (Shipping + Platform + Other) */}
-                    <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">
-                        Fees
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
-                        <input
-                          type="text"
-                          value={formatCurrency(item.total_fees)}
-                          disabled
-                          className="w-full pl-5 pr-2 py-1.5 border border-slate-300 rounded text-xs bg-slate-50 text-slate-700"
-                          title="Total of shipping, platform, and other fees"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Date Sold */}
-                    <div>
-                      <label className="block text-[10px] font-medium text-slate-500 mb-1">
-                        Date Sold
-                      </label>
-                      <input
-                        type="date"
-                        value={isEditing ? (editValues.date_sold ?? item.date_sold ?? '') : (item.date_sold ?? '')}
-                        onChange={(e) =>
-                          setEditValues({
-                            ...editValues,
-                            date_sold: e.target.value || null,
-                          })
-                        }
-                        disabled={!isEditing}
-                        className="w-full px-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:bg-slate-50 disabled:text-slate-700"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })
-      )}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

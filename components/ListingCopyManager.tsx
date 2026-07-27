@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 type PlatformCopy = {
@@ -19,7 +19,6 @@ type ListingCopyManagerProps = {
 export function ListingCopyManager({ itemId }: ListingCopyManagerProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copy, setCopy] = useState<PlatformCopy | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -28,41 +27,11 @@ export function ListingCopyManager({ itemId }: ListingCopyManagerProps) {
   // Editable state for each field
   const [editableCopy, setEditableCopy] = useState<PlatformCopy | null>(null);
 
-  // Load existing listing copy on mount
-  useEffect(() => {
-    const loadExistingCopy = async () => {
-      try {
-        const response = await fetch(`/api/items/${itemId}/listing-copy`);
-        const result = await response.json();
-
-        if (response.ok && result.data) {
-          const existingCopy: PlatformCopy = {
-            ebayTitle: result.data.ebay_title || '',
-            ebayDescription: result.data.ebay_description || '',
-            facebookTitle: result.data.facebook_title || '',
-            facebookDescription: result.data.facebook_description || '',
-            etsyTitle: result.data.etsy_title || '',
-            etsyDescription: result.data.etsy_description || '',
-          };
-          setCopy(existingCopy);
-          setEditableCopy(existingCopy);
-        }
-      } catch (err) {
-        console.error('Error loading existing copy:', err);
-      } finally {
-        setInitialLoading(false);
-      }
-    };
-
-    loadExistingCopy();
-  }, [itemId]);
-
   const handleGenerate = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Generate new copy
       const response = await fetch(`/api/items/${itemId}/copy`);
       const data = await response.json();
 
@@ -71,14 +40,7 @@ export function ListingCopyManager({ itemId }: ListingCopyManagerProps) {
       }
 
       setCopy(data.copy);
-      setEditableCopy(data.copy);
-
-      // Automatically save the generated copy to database
-      await fetch(`/api/items/${itemId}/listing-copy`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data.copy),
-      });
+      setEditableCopy(data.copy); // Initialize editable copy
     } catch (err: any) {
       setError(err.message || 'Failed to generate listing copy');
     } finally {
@@ -120,17 +82,6 @@ export function ListingCopyManager({ itemId }: ListingCopyManagerProps) {
       setSaving(false);
     }
   };
-
-  // Show loading state while fetching existing copy
-  if (initialLoading) {
-    return (
-      <div className="bg-white p-6 rounded shadow-sm">
-        <div className="text-sm text-slate-600 py-8 text-center">
-          Loading existing sales copy...
-        </div>
-      </div>
-    );
-  }
 
   if (!copy && !loading && !error) {
     return (

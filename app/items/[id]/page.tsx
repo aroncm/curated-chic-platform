@@ -2,8 +2,6 @@ import Image from 'next/image';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import { AiStatusBanner } from '@/components/AiStatusBanner';
 import { AnalysisResultsView } from '@/components/AnalysisResultsView';
-import { Breadcrumb } from '@/components/Breadcrumb';
-import { AnalyzeButton } from '@/components/AnalyzeButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +37,7 @@ export default async function ItemDetailPage({
         'ai_status',
         'ai_error',
         'owner_id',
-        'item_images(id, url, edited_url)',
+        'item_images(*)',
         'purchases(*)',
         'listings(*)',
         'sales(*)',
@@ -71,14 +69,6 @@ export default async function ItemDetailPage({
 
   return (
     <main className="space-y-6">
-      <Breadcrumb
-        items={[
-          { label: 'Home', href: '/items' },
-          { label: 'Inventory', href: '/inventory' },
-          { label: itemData.title || 'Item Details' },
-        ]}
-      />
-
       <AiStatusBanner status={(itemData as any).ai_status} error={(itemData as any).ai_error} />
 
       <div className="flex justify-between items-center">
@@ -91,7 +81,11 @@ export default async function ItemDetailPage({
         </div>
         {itemData.ai_status === 'idle' && (
           <div className="flex gap-2">
-            <AnalyzeButton itemId={itemData.id} />
+            <form action={`/api/items/${itemData.id}/analyze`} method="post">
+              <button className="bg-emerald-600 text-white px-4 py-2 rounded text-sm">
+                Analyze This Item
+              </button>
+            </form>
           </div>
         )}
       </div>

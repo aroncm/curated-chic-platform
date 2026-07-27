@@ -1,8 +1,6 @@
 import Image from 'next/image';
 import { createSupabaseServerClient } from '@/lib/supabaseClient';
 import { ListingCopyManager } from '@/components/ListingCopyManager';
-import { Breadcrumb } from '@/components/Breadcrumb';
-import { EditImageButton } from '@/components/EditImageButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +28,7 @@ export default async function ListingManagementPage({
         'estimated_low_price',
         'estimated_high_price',
         'suggested_list_price',
-        'item_images(id, url, edited_url)',
+        'item_images(*)',
       ].join(',')
     )
     .eq('id', params.id)
@@ -50,28 +48,29 @@ export default async function ListingManagementPage({
   const images = (itemData.item_images || []) as Array<{
     id: string;
     url: string;
-    edited_url?: string | null;
   }>;
   const primaryImage = images[0];
 
   return (
     <main className="space-y-6">
-      <Breadcrumb
-        items={[
-          { label: 'Home', href: '/items' },
-          { label: 'Inventory', href: '/inventory' },
-          { label: itemData.title || 'Item', href: `/items/${itemData.id}` },
-          { label: 'Listing Management' },
-        ]}
-      />
-
       {/* Header with item info */}
       <div className="bg-white p-6 rounded shadow-sm">
-        <h1 className="text-2xl font-semibold mb-4">{itemData.title}</h1>
+        <div className="flex items-start gap-4">
+          {/* Primary Image */}
+          {primaryImage && (
+            <div className="relative w-32 h-32 flex-shrink-0">
+              <Image
+                src={primaryImage.url}
+                alt={itemData.title}
+                fill
+                className="object-cover rounded"
+              />
+            </div>
+          )}
 
-        <div className="flex items-start gap-6">
           {/* Item Details */}
           <div className="flex-1">
+            <h1 className="text-2xl font-semibold mb-2">{itemData.title}</h1>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
               <div className="text-slate-600">Category:</div>
               <div className="font-medium">{itemData.category || '—'}</div>
@@ -102,63 +101,6 @@ export default async function ListingManagementPage({
             </div>
           </div>
         </div>
-
-        {/* Product Images Section */}
-        {images.length > 0 && (
-          <div className="mt-6 border-t pt-4">
-            <h3 className="text-sm font-semibold mb-3">Product Images</h3>
-            <div className="flex gap-4 overflow-x-auto pb-2">
-              {images.map((img) => (
-                <div key={img.id} className="flex-shrink-0">
-                  <div className="relative w-40 h-40 mb-2">
-                    <Image
-                      src={img.edited_url || img.url}
-                      alt={itemData.title}
-                      fill
-                      className="object-cover rounded border border-slate-200"
-                    />
-                    {img.edited_url && (
-                      <div className="absolute top-1 left-1 bg-purple-600 text-white text-xs px-2 py-0.5 rounded">
-                        Edited
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <EditImageButton
-                      imageId={img.id}
-                      originalUrl={img.url}
-                      editedUrl={img.edited_url}
-                      itemTitle={itemData.title}
-                    />
-                    {img.edited_url && (
-                      <a
-                        href={img.edited_url}
-                        download={`${itemData.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_edited_${Date.now()}.png`}
-                        className="text-xs bg-emerald-600 text-white px-2 py-1 rounded hover:bg-emerald-700 transition-colors flex items-center gap-1"
-                        title="Download edited image"
-                      >
-                        <svg
-                          className="w-3 h-3"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                          />
-                        </svg>
-                        Download
-                      </a>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Listing Copy Manager */}
